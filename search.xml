@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Docker和传统虚拟机的区别</title>
+      <link href="/post/76b76384.html"/>
+      <url>/post/76b76384.html</url>
+      
+        <content type="html"><![CDATA[<p>最近在部署自己的博客时遇见过购买服务器的问题，当时打开阿里云轻量级服务器时，看见这么多的实例，属实是自己也有点懵逼，什么ECS，VPS，ECI一大堆，自己也不知道是什么东西，但是跟着CSDN教程，还是把服务器给选好了；这两天在学习操作系统的时候，老师也讲到docker技术，并且给我们强调了它和虚拟机的区别，当时旁边一个同学一直在说docker和nachos没什么太大的区别，我很疑惑，于是在课后搜索了相关资料，汇总成这一篇学习笔记</p><h2 id=""><a href="#" class="headerlink" title=""></a><mark class="hl-label blue">物理服务器是什么？</mark> </h2><p>当时在搭建网站的时候，搜索服务器的时候，网站上给我很多推荐，教我如何自己搭建一台属于自己的服务器，当时点进去稍微浏览了一下，其实用一台废弃的电脑就可以做成，因为一台自己的服务器只需要cpu、内存等硬件以及操作系统，像这样的一台看得见摸得着的机器，其实就是云厂商页面里提到的<mark class="hl-label purple">物理服务器</mark> 或者<mark class="hl-label purple">物理机</mark> ，有的厂商叫它<mark class="hl-label purple">独立服务器</mark> </p><p>所以我们为什么要买云厂商的服务器呢？自己搭建一个属于自己的不香吗？</p><p>当然不香，自己搭建在家里不耗电吗？一年下来电费都好几百，还得花精力给它维修，保证它不关机，最重要的是，性能还没云厂商的好，核数还没人家的高，自己搭那真是纯小丑🤡🤡</p><p>但是问题又来了，云厂商的物理服务器一般都是固定的，而且很高，我们购买云服务器的时候是可以选择对应核数的，并且我们有时候根本不需要这么高配的机器，那怎么办呢？这一点当然云厂商也考虑到了。</p><h2 id="-1"><a href="#-1" class="headerlink" title=""></a><mark class="hl-label default">vps和ecs是什么？blue</mark> </h2><p>云厂商一般会将一台物理服务器分割为多个虚拟机，跟我们在自己的电脑上安装VMware建立虚拟机是一个道理。每个虚拟机都有自己独立的操作系统、资源（CPU、内存、存储空间）和公网IP地址，然后对外出售，这样的虚拟机就是<strong>VPS</strong>（Virtual Private Server，虚拟专用服务器）</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240412111503808.png" alt="image-20240412111503808"></p><p>但是传统VPS有个缺点，不支持用户自主升降级，资源是预先分配好的并且不易于动态调整的，即你买了1核1G的服务器，想给它升级成2核2G的，但在VPS中是不能实现的，如果加入自主升级降级的功能，那就成了<strong>ECS</strong>（Elastic Compute Service，弹性计算服务）</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240412112116264.png" alt="image-20240412112116264"></p><p>用户可以根据需要随时调整CPU、内存、磁盘和带宽，所以为什么叫<mark class="hl-label purple">弹性</mark> </p><h2 id="-2"><a href="#-2" class="headerlink" title=""></a><mark class="hl-label blue">docker容器是什么？</mark> </h2><p>有了自己的ECS后，一般我们会开始部署自己的软件应用，机器少的时候我们手动部署问题不大，机器多了的话各种问题就来了，最明显的就是底层操作系统的不同，部署应用的时候会有各种环境问题，但是如果能让软件带着操作系统环境一起部署就好了，最简单的办法就是让软件和操作系统一起打包成虚拟机部署在ECS中，但是这样东西太多了，太重了。</p><p>聪明的科学家们想到了解法，既然一个操作系统太重，那就只打包<mark class="hl-label purple">软件和系统依赖库加载配置</mark> 就好了。然后将这部分系统文件挂载到ECS操作系统下，利用一个叫<mark class="hl-label purple">Namespace</mark>  的能力让它看起来像一个独立的操作系统一样，再利用一个叫<mark class="hl-label purple">Cgroup</mark> 的能力限制它能使用的计算资源，这样省掉了一层笨重的操作系统，同时让软件轻松地运行在各类操作系统上，这就是常说的Docker容器技术</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240412154242434.png" alt="image-20240412154242434"></p><p>总的来说，就是服务器上跑ECS，ECS上跑Docker容器，多个Docker容器共享一个ECS实例</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240412154402520.png" alt="image-20240412154402520"></p><h2 id="-3"><a href="#-3" class="headerlink" title=""></a><mark class="hl-label Nachos是什么？">docker</mark> </h2><p>Nachos全程(Not Another Completely Heuristic Operating System)，是一个教学用的操作系统，提供了操作系统的框架。本质上是Linux宿主机上的一个进程，是一个框架，很多地方的实现都需要我们自己来完善，在完善这些功能的同时，可以帮助我们更加的了解到操作系统的内部运行机制，只是一个身体力行的教学平台！！！和Docker半毛钱关系都没有，老师上课讲Docker，可能只是想让我们用Docker管理自己的Nachos！</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240412160555824.png" alt="image-20240412160555824"></p><p>所以，有些东西还得自己去看，听别人的只能把自己搞得更糊涂</p><h2 id="文章参考来源"><a href="#文章参考来源" class="headerlink" title="文章参考来源"></a>文章参考来源</h2><p><a href="https://mp.weixin.qq.com/s?__biz=MzUxODAzNDg4NQ==&amp;mid=2247534049&amp;idx=2&amp;sn=1ef2674ddb3217bbafcb5cd6946407ac&amp;chksm=f98d014bcefa885d6b68c0405718abf634a33427264a8ae4d04bc478bc03121dbfdceed7012e&amp;scene=21#wechat_redirect">面试官：Docker和传统虚拟机有什么区别？</a></p><p>NachOs实验文档（老师发的）</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 面试知识点 </category>
+          
+          <category> 操作系统 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 虚拟机 </tag>
+            
+            <tag> Docker </tag>
+            
+            <tag> Nachos </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>D4基础入门-加密算法&amp;Web&amp;数据库&amp;系统&amp;代码</title>
       <link href="/post/f52e1c95.html"/>
       <url>/post/f52e1c95.html</url>
