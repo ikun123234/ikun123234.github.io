@@ -4,6 +4,39 @@
   
     
     <entry>
+      <title>WEB攻防-ASP安全</title>
+      <link href="/post/2f49a156.html"/>
+      <url>/post/2f49a156.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="ASP简介"><a href="#ASP简介" class="headerlink" title="ASP简介"></a>ASP简介</h2><p>ASP文件可包含文本、HTML标签和脚本。ASP文件中的脚本可以在服务器上执行。ASP即（<strong>A</strong>ctive <strong>S</strong>erver <strong>P</strong>ages），动态服务器页面，相对于PHP和JAVA，ASP搭建在Windows2003上，目前已经较为过时，使用ASP的网站也已经越来越少，所以这部分漏洞利用价值也不高，但是仍然需要有一定的了解</p><h2 id="ASP环境搭建组合"><a href="#ASP环境搭建组合" class="headerlink" title="ASP环境搭建组合"></a>ASP环境搭建组合</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">Windows操作系统</span><br><span class="line">IIS中间件</span><br><span class="line">Access数据库</span><br></pre></td></tr></table></figure><p>IIS全称是Internet Information Services（互联网信息服务），是微软提供的运行在Windows系统下的中间件，主要用来解析.asp，.asa，.cer三种格式的文件，实际环境中.asp一般都是被过滤的，所以有时候尝试一下asa和cer两种格式上传即可</p><h3 id="什么是文件解析？"><a href="#什么是文件解析？" class="headerlink" title="什么是文件解析？"></a>什么是文件解析？</h3><p>当服务器接收到一个HTTP请求时，IIS（中间件）首先要决定如何去处理这个请求（一般都是根据文件后缀名，如果是PHP就丢给PHP程序去处理，如果是ASP就丢给IIS去处理），服务器获取所有请求页面的后缀名后，会在服务器端寻找可以处理这类后缀名的应用程序，如果找不到就直接把这个文件返回给客户端</p><h3 id="版本对应"><a href="#版本对应" class="headerlink" title="版本对应"></a>版本对应</h3><figure class="highlight php"><table><tr><td class="code"><pre><span class="line">Windows <span class="number">2003</span> server -------&gt;IIS <span class="number">6.0</span></span><br><span class="line">Windows <span class="number">7</span> -------&gt;IIS <span class="number">7.0</span>和IIS <span class="number">7.5</span></span><br><span class="line">Windows <span class="number">2008</span> server sp2 -------&gt; IIS <span class="number">7.0</span></span><br><span class="line">Windows <span class="number">2008</span> server R2--------&gt;IIS <span class="number">7.5</span></span><br><span class="line">xp和<span class="number">2000</span> server对应的IIS <span class="number">5.0</span></span><br></pre></td></tr></table></figure><h3 id="IIS6-0解析漏洞"><a href="#IIS6-0解析漏洞" class="headerlink" title="IIS6.0解析漏洞"></a>IIS6.0解析漏洞</h3><p>第一种是在浏览器下建立一个名为xxx.asp的目录，6.0默认在.asp下的文件都以ASP文件来解析，例如/test.asp/1.gif会被当作ASP解析</p><p>第二种利用分号这个符号，例如test.asp;.jpg本质上是jpg文件，但是在6.0中由于分号的作用会被当成asp程序执行，这应该也是为什么Windows禁止命名时里面有特殊字符</p><h3 id="IIS7-5解析漏洞"><a href="#IIS7-5解析漏洞" class="headerlink" title="IIS7.5解析漏洞"></a>IIS7.5解析漏洞</h3><p>如果PHP默认开启cgi.fix_pathinfo的话，会对文件路径进行修理，什么是修理？就是当PHP遇到文件路径/aaa.xxx/bbb.yyy时，若/aaa.xxx/bbb.yyy不存在，则会去掉最后的bbb.yyy。然后去判断/aaa.xxx是否存在，如果存在，则把/aaa.xxx当作文件去解析，如果有文件test.jpg，在访问时在其后加了/.php，便可以让IIS把test.jpg/.php交给PHP去处理，由于test.jpg/.php这个路径是肯定不存在的，于是进行修理，得到test.jpg，这个文件是存在的，于是就把这个文件交给PHP去处理解析，如果是个恶意代码就会产生一些破坏，CTF里面有时候会遇到这些题，日常中应该用的还比较少</p><h2 id="MDB默认下载"><a href="#MDB默认下载" class="headerlink" title="MDB默认下载"></a>MDB默认下载</h2><p>因为asp一般将数据库文件放在网站根目录下，如果我们知道数据库的地址，我们可以尝试下载获取数据库文件，获取当前管理员账号密码信息（asp的默认数据库后缀为mdb）</p><p>思路：首先先尝试获取数据库文件位置，可以尝试默认数据库配置（即本地搭建后默认存放的数据库文件与其他文件位置）或者使用扫描工具</p><p>IIS6.0把asp、asa、cdx、cer解析成asp文件，原因是这四种扩展名都是用的同一个asp.dll文件执行，而对于mdb文件，ISS不能解析MDB文件，会当成普通文件进行下载，也就达到了我们绕过的目的</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/80a1e6ff69fa49e5bc0ee804af18240c.png" alt="在这里插入图片描述"></p><p>以动易网络cms为例，若使用动易网络cms的网站不修改默认数据库及其他文件路径可通过默认路径得到数据库文件进而得到网站管理员账号密码，对于网站管理员后台也可采用同样的思路</p><p>首先输入mdb文件所在的文件夹位置，访问后自动下载</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528172132368.png" alt="image-20240528172132368"></p><p>打开后，我们可以看见管理员账户密码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528172252411.png" alt="image-20240528172252411"></p><p>之后访问<code>http://192.168.49.146/Admin/Admin_Login.asp</code>进行后台登录，输入管理员账号密码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528172406156.png" alt="image-20240528172406156"></p><h2 id="ASP后门植入"><a href="#ASP后门植入" class="headerlink" title="ASP后门植入"></a>ASP后门植入</h2><p>数据库后缀为asp，访问之后并不会直接下载，而是会产生一段乱码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528172720302.png" alt="image-20240528172720302"></p><p>但是由于是asp后缀，当我们插入恶意代码时，系统会帮我们进行执行，如果对留言板传入数据处理不当，我们就可以进行代码注入，可以将一句话木马插入数据库，进而getshell</p><p>以aspcms为例，一句话木马为<code>┼攠數畣整爠煥敵瑳∨≡┩愾</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528173448671.png" alt="image-20240528173448671"></p><p>之后用菜刀或者antsword进行连接，就可以看到源代码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528173535188.png" alt="image-20240528173535188"></p><h2 id="IIS短文件名探针"><a href="#IIS短文件名探针" class="headerlink" title="IIS短文件名探针"></a>IIS短文件名探针</h2><p>为了知道相应的路径，我们可以使用探针工具进行爆破，其原理如下</p><p>为了兼容16位MS-DOS程序，Windows为文件名较长的文件和文件夹生成了对应的Windows8.3短文件名</p><p>由于短文件名的长度固定，我们可以直接对短文件名进行暴力破解，从而访问对应的文件</p><p>短文件名特征</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="number">1</span>)  只有前六位字符直接显示，后续字符用~<span class="number">1</span>指代。其中数字<span class="number">1</span>还可以递增，如果存在多个文件名类似的文件（名称前<span class="number">6</span>位必须相同，且后缀名前<span class="number">3</span>位必须相同）</span><br><span class="line"><span class="number">2</span>)  后缀名最长只有<span class="number">3</span>位，多余的被截断</span><br><span class="line"><span class="number">3</span>)  访问构造的某个存在的短文件名，会返回<span class="number">404</span></span><br><span class="line"><span class="number">4</span>)  访问构造的某个不存在的短文件名，会返回<span class="number">400</span></span><br></pre></td></tr></table></figure><p>我们可以使用探针工具，比如<code>iis_shortname_Scan.py</code>进行扫描，如下图所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528184812313.png" alt="image-20240528184812313"></p><h2 id="IIS配置目录读写"><a href="#IIS配置目录读写" class="headerlink" title="IIS配置目录读写"></a>IIS配置目录读写</h2><p>当web服务器中开启了WebDAV，配置了可以写入的权限，存在PUT任意文件写入漏洞</p><p><strong>利用方法：桂林老兵iiswrite，用PUT/MOVE之类的请求方式往服务器传后门文件，然后改文件名使用菜刀连接</strong></p><p>以本地搭建的web网站为例：</p><p>首先开启WebDAV的写入权限，使用iisputscanner扫描</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528185754738.png" alt="image-20240528185754738"></p><p>出现YES则代表开启了相关服务，之后使用桂林老兵进行上传，首先上传一个txt文件，上传之后重命名为asp文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528190043428.png" alt="image-20240528190043428"></p><p>test.txt无法被iis解析，利用MOVE将txt的文件修改为可解析执行的asp，但是上传失败，我们利用文件解析漏洞再次上传，我们将文件后缀名改成<code>shell.asp;.txt</code>，上传的虽然是txt文件，但是会被当成asp文件进行执行</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240528195603715.png" alt="image-20240528195603715"></p><p>然后使用菜刀连接，就可以getshell</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ASP </tag>
+            
+            <tag> MDB下载 </tag>
+            
+            <tag> IIS短文件 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>PHP开发-ThinkPHP框架及历史漏洞</title>
       <link href="/post/b689c3c5.html"/>
       <url>/post/b689c3c5.html</url>
@@ -551,7 +584,7 @@
     
     
     <entry>
-      <title>D3基础入门-抓包&amp;封包&amp;协议&amp;APP&amp;小程序&amp;PC应用&amp;WEB应用</title>
+      <title>基础入门-抓包&amp;封包&amp;协议&amp;APP&amp;小程序&amp;PC应用&amp;WEB应用</title>
       <link href="/post/883d81a3.html"/>
       <url>/post/883d81a3.html</url>
       
