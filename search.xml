@@ -8,9 +8,25 @@
       <link href="/post/94af272a.html"/>
       <url>/post/94af272a.html</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[<h2 id="PHP缺陷函数"><a href="#PHP缺陷函数" class="headerlink" title="PHP缺陷函数"></a>PHP缺陷函数</h2><h3 id="强等于与弱等于"><a href="#强等于与弱等于" class="headerlink" title="强等于与弱等于"></a>强等于与弱等于</h3><p>在PHP中，<code>=</code>代表赋值，<code>==</code>代表弱等于，<code>===</code>代表强等于，强等于和弱等于区别就在于是否比较类型</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line">===:比较的不仅仅是值相等，而且类型也必须相等，只有当值和类型都相等的时候，才会返回ture</span><br><span class="line">例如 <span class="title function_ invoke__">var_dump</span>(<span class="number">1</span>===<span class="string">&quot;1&quot;</span>);返回的是<span class="literal">false</span></span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605114211356.png" alt="image-20240605114211356"></p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line">==:弱比较只要求比较两个值在转化类型之后相等即可，如果两个值的类型不同，会尝试将其中一个值转化为另一个值的类型</span><br><span class="line">例如 <span class="title function_ invoke__">var_dump</span>(<span class="number">1</span>==<span class="string">&quot;1&quot;</span>);返回的是<span class="literal">true</span></span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605114412890.png" alt="image-20240605114412890"></p><p>综上，php比较运算符<code>===</code>在进行比较时，会先比较两种字符串的类型是否相等，再比较值是否相等，一般md5弱等于比较常考</p><p>具体例子可以参考这一篇：<a href="https://blog.csdn.net/csjjjd/article/details/135005124">PHP强相等&amp;弱相等（附带科学计数法）_php 科学计数法-CSDN博客</a></p><h3 id="intval函数"><a href="#intval函数" class="headerlink" title="intval函数"></a>intval函数</h3><p><code>intval()</code>函数可以获取变量的整数值，常用于强制类型转换，常见语法<code>int intval($var,$base)</code>，其中<code>$var</code>为需要转化的变量，<code>$base</code>为转换所需要的进制，当base为空时，默认值为0，会根据<code>$var</code>的格式来调整转化进制，如果<code>$var</code>以0开头，就使用8进制，如果<code>$var</code>以0x开头，就使用16进制，否则使用10进制</p><p>当<code>intval()</code>遇上数组的时候，不关系数组的内容，只判断数组内有没有元素，如果是空数组就返回0，如果是非空数组就返回1，但是当传入的<code>$var</code>是数组中的某个值时，则当作变量来进行转换，而不是当作数组类型</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="variable">$arr</span> = <span class="keyword">array</span>(<span class="number">8</span>,<span class="number">6</span>);</span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="variable">$arr</span>[<span class="number">0</span>]));</span><br><span class="line">返回的是 <span class="keyword">int</span>(<span class="number">8</span>)</span><br></pre></td></tr></table></figure><p>当进行字符串转化时，会先判断字符串是否已数字开头，如果以数字开头，就会返回1个或多个连续的数字，如果以字母开头，就返回0</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="string">&#x27;12abc&#x27;</span>));     <span class="keyword">int</span>(<span class="number">12</span>)</span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="string">&quot;12abc&quot;</span>));     <span class="keyword">int</span>(<span class="number">12</span>)</span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="string">&#x27;abc123&#x27;</span>));    <span class="keyword">int</span>(<span class="number">0</span>)</span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="string">&#x27;1a2b3c&#x27;</span>));    <span class="keyword">int</span>(<span class="number">1</span>)</span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="string">&#x27;0101&#x27;</span>));      <span class="keyword">int</span>(<span class="number">101</span>)</span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">intval</span>(<span class="string">&quot;0x2b&quot;</span>));      <span class="keyword">int</span>(<span class="number">0</span>)</span><br></pre></td></tr></table></figure><p>另外，<code>intval()</code>支持算术运算，即<code>intval(5*5)</code>会返回25</p><h3 id="strpos函数"><a href="#strpos函数" class="headerlink" title="strpos函数"></a>strpos函数</h3><p><code>strpos</code>函数用于查找一个字符串在另一个字符串中首次出现的位置（区分大小写），如果找到了匹配的字符串，<code>strpos</code>函数就会返回匹配的第一个字符的索引值，否则就返回false</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="variable">$str1</span> = <span class="string">&quot;Hello, world!&quot;</span>;</span><br><span class="line"><span class="variable">$str2</span> = <span class="string">&quot;world&quot;</span>;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 查找 $str2 在 $str1 中首次出现的位置</span></span><br><span class="line"><span class="variable">$pos</span> = <span class="title function_ invoke__">strpos</span>(<span class="variable">$str1</span>, <span class="variable">$str2</span>);</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$pos</span> !== <span class="literal">false</span>) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;找到了 <span class="subst">$str2</span>，它在 <span class="subst">$str1</span> 中的位置是 <span class="subst">$pos</span>&quot;</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;<span class="subst">$str2</span> 不在 <span class="subst">$str1</span> 中&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>输出结果</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605132739685.png" alt="image-20240605132739685"></p><p>当我们使用<code>strpos</code>函数的时候，如果被匹配字符串开头就是我们要匹配的目标字符串，那么strpos就会返回0，此时如果采用弱比较，那么<code>0==false</code>返回的是true，那么就会和没找到相关字符串情况相同，这个时候我们就可以成功绕过strpos函数</p><p>同时，如果加上换行符%0a时，strpos是检测不出来的，这也是这种函数的一种绕过思路</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605134026638.png" alt="image-20240605134026638"></p><h3 id="in-array"><a href="#in-array" class="headerlink" title="in_array"></a>in_array</h3><p>在PHP中，可以使用<code>in_array()</code>函数直接确定某元素是否在数组中，如果数组中存在该元素，则会返回true，如果不存在，则返回false</p><p>语法<code>in_array(search,array,type)</code></p><p>当type设置为strict时，就会判断类型，和强等于一致，但是如果不设置type，就不会判断类型，和弱等于一样，故其绕过方式可以参考强等于和弱等于</p><h3 id="preg-match"><a href="#preg-match" class="headerlink" title="preg_match"></a>preg_match</h3><p><code>preg_match</code>是检查是否匹配的函数，经常用在正则表达式的匹配中，其语法为<code>preg_match($pattern,$subject,$matches,$flags,$offset)</code>，前两个参数是必须的，后三个参数不填写的话会有自己的默认值</p><p>通常<code>preg_match</code>有以下几种方式绕过</p><p><strong>数组绕过</strong></p><p>由于<code>preg_match</code>只能处理字符串，如果不按规定传入一个字符串，通常传入一个数组进去，就会使<code>preg_match</code>失效，从而进行绕过</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$a</span>=<span class="string">&#x27;flag.php&#x27;</span>; <span class="comment">//目标是输入flag.php</span></span><br><span class="line"><span class="keyword">if</span>(!<span class="title function_ invoke__">preg_match</span>(<span class="string">&quot;/flag/&quot;</span>,<span class="variable">$a</span>)==<span class="literal">false</span>)&#123; <span class="comment">//如果匹配中出现了flag</span></span><br><span class="line"><span class="keyword">die</span>(<span class="string">&#x27;这样子是不行的~&#x27;</span>); <span class="comment">//绕过失败，输出：这样子是不行的~</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&#x27;成功啦~&#x27;</span>; <span class="comment">//绕过成功</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p>此时我们通常有三种绕过数组形式，如下所示</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="variable">$a</span>[] = <span class="string">&#x27;flag.php&#x27;</span>;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">array</span>(<span class="string">&#x27;flag.php&#x27;</span>);</span><br><span class="line"><span class="variable">$a</span> = [<span class="string">&#x27;flag.php&#x27;</span>];</span><br></pre></td></tr></table></figure><h3 id="str-replace"><a href="#str-replace" class="headerlink" title="str_replace"></a>str_replace</h3><p><code>str_replace</code>函数的作用是替换字符串中的一些字符（区分大小写），其缺陷在于无法迭代过滤，只过滤一次，所以我们通常通过双写进行绕过</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605174943563.png" alt="image-20240605174943563"></p><p>接下来进行双写flag进行绕过，将<code>$a</code>改成<code>flflagag.php</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605175053228.png" alt="image-20240605175053228"></p><p>成功绕过，同时，由于<code>preg_replace</code>对大小写不敏感，所以我们也可以大写绕过</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605175158065.png" alt="image-20240605175158065"></p><h2 id="CMS实例"><a href="#CMS实例" class="headerlink" title="CMS实例"></a>CMS实例</h2><h3 id="MetInfo-任意文件读取"><a href="#MetInfo-任意文件读取" class="headerlink" title="MetInfo 任意文件读取"></a>MetInfo 任意文件读取</h3><p> 考点：<code>str_replace</code>无法迭代过滤</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/f8ac8250bcfee65b8af089e9b59a37bc.png" alt="f8ac8250bcfee65b8af089e9b59a37bc"></p><p>通过实现<code>../和./</code>的过滤，防止用户实现路径穿越，由于<code>$dir</code>是可控的，我们可以通过绕过<code>str_replace</code>来实现任意文件读取，故对应的payload为<code>../http\..\config\config_db.php</code>，可以读到数据库配置文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240605180223578.png" alt="image-20240605180223578"></p><h3 id="piwigo-SQL注入"><a href="#piwigo-SQL注入" class="headerlink" title="piwigo SQL注入"></a>piwigo SQL注入</h3><p>考点：使用<code>in_array</code>函数但未使用第三个参数，导致过滤不严，造成代码的注入，进而引起sql注入</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/ff97380da602a8dd3bbf5d8c1e1cfc86.png" alt="ff97380da602a8dd3bbf5d8c1e1cfc86"></p><p>故payload为<code>1,1 and if(ascii(substr((select database(),1,1))=112,1,sleep(3)));</code></p>]]></content>
       
       
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> PHP特性 </tag>
+            
+        </tags>
       
     </entry>
     
@@ -413,11 +429,11 @@
       
         <tags>
             
+            <tag> 端口扫描 </tag>
+            
             <tag> CDN </tag>
             
             <tag> WAF </tag>
-            
-            <tag> 端口扫描 </tag>
             
             <tag> 负载均衡 </tag>
             
@@ -545,15 +561,15 @@
       
         <tags>
             
+            <tag> CDN </tag>
+            
+            <tag> WAF </tag>
+            
             <tag> Web安全 </tag>
             
             <tag> 资产架构 </tag>
             
             <tag> 端口 </tag>
-            
-            <tag> CDN </tag>
-            
-            <tag> WAF </tag>
             
             <tag> 源码泄露 </tag>
             
