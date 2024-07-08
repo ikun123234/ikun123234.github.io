@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>WEB攻防-JavaScript项目</title>
+      <link href="/post/f70689ba.html"/>
+      <url>/post/f70689ba.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="JavaScript特点"><a href="#JavaScript特点" class="headerlink" title="JavaScript特点"></a>JavaScript特点</h2><p>想必大家都比较清楚什么是JavaScript语言，当遇见一个网页时，我们只需要按下F12，如果看到了什么app.js，这些js文件就是JavaScript语言开发的，JS语言作为比较常见的前端开发语言，他的一个很重要的特性就是代码的可读性，它不像php，java等开发语言是只有服务器才知道代码是怎样的，JS语言通过F12可以在web端查看到源代码，等同于白盒测试，我们可以更快的发现可控变量，方便我们寻找相关漏洞</p><h2 id="如何判断是否为JS代码开发？"><a href="#如何判断是否为JS代码开发？" class="headerlink" title="如何判断是否为JS代码开发？"></a>如何判断是否为JS代码开发？</h2><p>首先可以使用插件 <strong>wappalyzer</strong>，如下图所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708093322845.png" alt="image-20240708093322845"></p><p>我们的wappalyzer可以很容易的识别相关网站使用了JS库，进而可以判断这个网站是使用JavaScript进行编写的</p><p>第二种方法是看其源代码是否简单，一般使用JavaScript的网站应用的源代码都很简短，因为JavaScript可以引用已经写好的一些js文件，使得自己编写的代码就很简短，如下图所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708093938827.png" alt="image-20240708093938827"></p><p>我们可以看到，基本上很多的代码都被封装在了js文件中，用<code>&lt;script src=&quot;/xxx/xxx/xxx.js&quot;&gt;</code>的形式进行 引用</p><p>最后一种方法就是抓包，看它的Cookie中是否有connect.sid，这也是JS开发的最基本的特征</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708094218031.png" alt="image-20240708094218031"></p><p>我们也可以使用FOFA查找相关关键字去发现使用JS开发的应用，进而可以实现通杀，如下图所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/411efd7de25186c8b7eca8e2c5f3802d.png" alt="411efd7de25186c8b7eca8e2c5f3802d"></p><h2 id="JS框架"><a href="#JS框架" class="headerlink" title="JS框架"></a>JS框架</h2><p>我们日常比较常见的JS框架有vue.js和jQuery</p><p><strong>Vue.js</strong>是一个开源的渐进式JavaScript框架，用于开发交互Web用户界面和单页应用程序，通过使用HTML、CSS和JavaScript来构建应用程序界面。Vue.js的目标是通过尽可能简单的API提供反应式数据绑定和可组合视图组件的好处</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/64fa5c0328548ccda49e44cb5d1ade9c.png" alt="Vue.js"></p><p><strong>jQuery</strong>是用JavaScript编写的，该库是跨平台和跨浏览器的。这意味着可以开发可在任何操作系统或浏览器上使用的应用程序。jQuery设计的宗旨是”写更少的代码，做更多的事情“，jQuery库封装了JavaScript常用的功能代码，提供一种简便的JavaScript设计模式，优化HTML文档操作、事件处理、动画设计和Ajax交互</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708144959808.png" alt="image-20240708144959808"></p><p>相关靶场可以搭建Vulhub进行复现，具体的搭建教程可以查看相关博客，这里就不再赘述，这个靶场上会更新许多漏洞，是一个复现漏洞的很好的平台</p><h2 id="实战案例"><a href="#实战案例" class="headerlink" title="实战案例"></a>实战案例</h2><p>首先打开我们的老朋友福利期货，点击忘记密码，进行浏览器抓包，找到实现相关功能的js包</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/c2c8d88d575d599c046bd7d5802852d0.png" alt="c2c8d88d575d599c046bd7d5802852d0"></p><p>找到关键代码，发现是要状态码为200的时候会返回验证成功，并进行路由跳转</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708150029154.png" alt="image-20240708150029154"></p><p>所以我们可以进行抓包，我们先随便输入一个验证码，然后进行抓包</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/83b16d7ee37d130304bba3ceac753362.png" alt="83b16d7ee37d130304bba3ceac753362"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708150807761.png" alt="image-20240708150807761"></p><p>对抓取到的数据包点击<code>Do intercept</code>，抓取他的返回包，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708150958471.png" alt="image-20240708150958471"></p><p>将<code>code:206</code>改成<code>code:200</code>，再把包放出去</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240708151214822.png" alt="image-20240708151214822"></p><p>验证成功，直接跳转到密码修改的地方，造成任意密码重置漏洞</p><p>但是在重新输入新密码的时候会出现流程错误的提示，很有可能是后端加了代码进行验证，导致无法绕过</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Node.js框架安全 </tag>
+            
+            <tag> 验证绕过 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>面试版-HTTP详解（一）</title>
       <link href="/post/8117742e.html"/>
       <url>/post/8117742e.html</url>
