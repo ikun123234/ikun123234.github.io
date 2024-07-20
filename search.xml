@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>川大实训-认识、了解云安全</title>
+      <link href="/post/d2bee70b.html"/>
+      <url>/post/d2bee70b.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="什么是ECS？产生背景和优势是什么？"><a href="#什么是ECS？产生背景和优势是什么？" class="headerlink" title="什么是ECS？产生背景和优势是什么？"></a>什么是ECS？产生背景和优势是什么？</h2><p>云厂商一般会将一台物理服务器分割为多个虚拟机，跟我们自己在VMware建立虚拟机是一个道理，每个虚拟机都有自己独立的操作系统、资源（CPU、内存、存储空间）和公网IP地址，这样的虚拟机就是VPS，虚拟专用服务器，但是VPS有一个缺点，就是不支持用户自主升降级，资源是预先分配好的并且不易于动态调整的，即如果你是1核1G的服务器，想要给他升级到2核2G的，在VPS中是实现不了的，但是如果加入自主升级降级的功能，就成了ECS（Elastic Compute Service，弹性计算服务），可以根据用户的需求随时调整CPU、内存、磁盘和带宽，所以被称为弹性服务器，这就是ECS产生的背景和优势，基于VPS不能自主升降级而产生ECS</p><h2 id="什么是安全组？有何作用？"><a href="#什么是安全组？有何作用？" class="headerlink" title="什么是安全组？有何作用？"></a>什么是安全组？有何作用？</h2><p>安全组是一种虚拟防火墙，能够控制ECS实例的出入站流量。安全组的入站方向控制ECS实例的入站流量，出方向控制ECS实例的出战流量，一般我们都对入站流量进行限制，而不限制出战流量，在安全组规则设定中，我们可以限制特定IP的访问，也可以限制特定端口是否开放，最好别把入站端口全部打开，因为我的服务器因为打开所有的入站规则三天被打了两次，如下是我的服务器安全组示例</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/660268872c10ed2f16edaa660a7bf897.png" alt="660268872c10ed2f16edaa660a7bf897"></p><p>授权IP就是允许访问的IP地址，<code>0.0.0.0/0</code>表示对所有IP都可以，即我没有对特定IP进行限制，端口范围即你想操作的端口，协议也可以进行选择，好好配置安全组，可以极小的减少自己服务器被攻击的可能性</p><h2 id="阿里云中什么是RAM，有何作用？"><a href="#阿里云中什么是RAM，有何作用？" class="headerlink" title="阿里云中什么是RAM，有何作用？"></a>阿里云中什么是RAM，有何作用？</h2><p>RAM（Resource Access Management），访问控制，是阿里云提供的管理用户身份与资源访问权限的服务。为什么要有这个访问控制的出现呢？是因为在购买云上资源的时候，会给购买者串账号密码，以方便云服务器对访问者进行鉴权，这对于个人云上资源是没有任何问题的，但是如果是一个大型公司的云上资源，倘若不做权限控制的话，仅仅靠一个账号密码就能拿下整个云上资源，那么这个时候对于公司来说就不敢轻易把这个账号密码告诉自己的所有员工，不然很容易就造成泄露。这个时候我们的RAM就发挥了作用，通过访问控制，我们可以灵活地设置员工的权限，甚至可以限制员工的登录环境，如下图所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240720152749381.png" alt="image-20240720152749381"></p><p>同样允许员工创建自己的私有数据空间以保证自己的数据的安全，允许我们按照权限进行分组，等等，方便我们更好的使用云安全，保障云上数据的安全</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240720153029863.png" alt="image-20240720153029863"></p><h2 id="什么是OSS，有何作用和优势？"><a href="#什么是OSS，有何作用和优势？" class="headerlink" title="什么是OSS，有何作用和优势？"></a>什么是OSS，有何作用和优势？</h2><p>阿里云对象存储服务（Object Storage Service，简称 OSS），OSS具有与平台无关的RESTful API接口，我们可以在任何应用、任何时间、任何地点存储和访问任意类型的数据，与自建存储相比，OSS存在易用性、持久性、数据安全等方面的优势，下面直接复制阿里云的官方文档</p><div class="table-container"><table><thead><tr><th style="text-align:center"><strong>对比项</strong></th><th><strong>对象存储OSS</strong></th><th><strong>自建服务器存储</strong></th></tr></thead><tbody><tr><td style="text-align:center">易用性</td><td>提供标准的RESTful API接口、丰富的SDK包、客户端工具、控制台。您可以像使用文件一样方便地上传、下载、检索、管理用于Web网站或者移动应用的海量数据。不限制存储空间大小。您可以根据所需存储量无限扩展存储空间，解决了传统硬件存储扩容问题。支持流式写入和读取。适合视频等大文件的同步读写业务场景。支持数据生命周期管理。您可以通过设置生命周期规则，将到期数据批量删除或者转储为更低成本的低频访问、归档存储、冷归档存储或者深度冷归档存储。</td><td>存储受硬盘容量限制，需人工扩容。不支持流式写入和读取。手动删除数据。</td></tr><tr><td style="text-align:center">持久性</td><td>OSS作为阿里巴巴全集团数据存储的核心基础设施，多年支撑双11业务高峰，历经高可用与高可靠的严苛考验。OSS的多重冗余架构设计，为数据持久存储提供可靠保障。同时，OSS基于高可用架构设计，消除单点故障，确保数据业务的持续性。服务可用性最高可达99.995%。数据设计持久性最高可达99.9999999999%（12个9）。规模自动扩展，不影响对外服务。OSS会通过计算网络流量包的校验和，验证数据包在客户端和服务端之间传输中是否出错，保证数据完整传输。OSS针对对象的操作具有强一致性。当对象上传或复制成功时，即可立即读取，且冗余写入多个设备。采用数据冗余存储机制，将每个对象的不同冗余存储在同一个区域内多个设施的多个设备上，确保硬件失效时的数据持久性和可用性。当数据存入OSS后，OSS会检测和修复丢失的冗余，确保数据持久性和可用性。OSS会周期性地通过校验等方式验证数据的完整性，及时发现因硬件失效等原因造成的数据损坏。当检测到数据有部分损坏或丢失时，OSS会利用冗余数据重建并修复损坏数据。</td><td>受限于硬件持久性，易出问题，当出现磁盘坏道时，容易出现不可逆转的数据丢失。人工数据恢复困难、耗时、耗力。</td></tr><tr><td style="text-align:center">数据安全</td><td>提供企业级多层次安全防护，包括服务端加密、客户端加密、防盗链、通过Bucket Policy限制IP黑白名单访问、细粒度权限管控、STS和URL鉴权与授权机制、WORM特性、日志审计等。提供用户级别资源隔离机制和多集群同步机制，支持异地容灾机制。支持基于SSL和TLS的HTTPS加密传输，有效防止数据在云端的潜在安全风险。提供版本控制功能，防止文件被误删除或覆盖而造成数据丢失。获得多项合规认证，包括SEC、FINRA等，满足企业数据安全与合规要求。</td><td>需要另外购买清洗和黑洞设备。需要单独实现安全机制。</td></tr><tr><td style="text-align:center">成本</td><td>可通过多线BGP接入运营商骨干网线路，带宽资源充足，上行流量免费。无需运维人员与托管费用，0成本运维。</td><td>存储受硬盘容量限制，需人工扩容。单线或双线接入速度慢，有带宽限制，峰值时期需人工扩容。需专人运维，成本高。</td></tr><tr><td style="text-align:center">智能存储</td><td>提供多种数据处理能力，例如图片处理、视频截帧、文档预览、图片场景识别、SQL查询等，并无缝对接Hadoop生态以及阿里云函数计算、EMR、DataLakeAnalytics、BatchCompute、MaxCompute、DBS等产品，满足企业数据分析与管理的需求。</td><td>需要额外采购，单独部署。</td></tr><tr><td style="text-align:center">加速访问</td><td>互联网访问加速：提供传输加速服务，可优化互联网传输链路和协议栈，大幅减少数据远距离传输超时的比例，极大地提升用户上传和下载体验。更多信息，请参见<a href="https://help.aliyun.com/zh/oss/user-guide/enable-transfer-acceleration#concept-1813960">传输加速</a>。内容加速分发：OSS作为源站，搭配CDN进行内容分发，提升同一个文件被重复下载的体验。</td><td>不支持。</td></tr></tbody></table></div><h2 id="AccessKey泄露有何风险？"><a href="#AccessKey泄露有何风险？" class="headerlink" title="AccessKey泄露有何风险？"></a>AccessKey泄露有何风险？</h2><p>AccessKey即访问密钥，相当于登陆密码，只是使用的场景不同，密码用于登录云服务器的控制面板，而AccessKey用于其他程序调用云服务API，如果不调用API，我们就不需要创建AccessKey</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/p45369.png" alt="新建用户AccessKey"></p><p>AccessKey泄露最大的风险就是自己的云上资源丢失，云服务器的权限被别人恶意接管，所以保护好自己的AccessKey非常重要，千万不要把其写进代码中</p><h2 id="什么是SSRF漏洞？"><a href="#什么是SSRF漏洞？" class="headerlink" title="什么是SSRF漏洞？"></a>什么是SSRF漏洞？</h2><p>SSRF（Server Side Request Forgery，服务端请求伪造）是一种由攻击者构造形成由服务端发起请求的一个安全漏洞，一般情况下，SSRF的攻击目标是从外网无法访问的内部系统，由于内网难以进行攻击，所以一般要由服务端进行发起</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/b53de209637a4a88853e1762d639b5d3.png" alt="在这里插入图片描述"></p><p>SSRF形成的原因大都是由于服务端提供了从其他服务器应用获取数据的功能而没有对目标地址做过滤和限制，黑客操作服务端从指定URL地址获取网页文本内容，加载指定地址的图片，下载等等。利用的是服务端的请求伪造。ssrf是利用存在缺陷的web应用作为代理攻击远程和本地的服务器</p><h2 id="阿里云中SSRF漏洞的危害是什么？修复思路？"><a href="#阿里云中SSRF漏洞的危害是什么？修复思路？" class="headerlink" title="阿里云中SSRF漏洞的危害是什么？修复思路？"></a>阿里云中SSRF漏洞的危害是什么？修复思路？</h2><p><strong>危害</strong>：SSRF的主要危害就是会造成控制台权限被接管，进而造成权限丢失，数据丢失等</p><p><strong>主要问题及修复思路：</strong></p><ol><li><p>应用存在漏洞，需要修补应用漏洞。</p></li><li><p>RAM 角色权限过大，导致可以通过该角色的权限进行创建子用户以及给子用户授予高权限等操作</p><p>整改：在为 RAM 角色赋予权限时，避免赋予过高的权限，只赋予自己所需要的权限。</p></li><li><p>元数据未做加固访问，导致一旦目标存在 SSRF 漏洞，元数据就存在被获取的风险。</p><p>整改：在「系统配置」的「高级选项」中将「实例元数据访问模式」设置为「仅加固模式」</p></li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 云安全 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 云安全 </tag>
+            
+            <tag> SSRF </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>nacos 1day保姆级复现</title>
       <link href="/post/6fe6c328.html"/>
       <url>/post/6fe6c328.html</url>
@@ -66,37 +97,6 @@
             <tag> PHP加固 </tag>
             
             <tag> MySQL加固 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>川大实训-认识、了解云安全</title>
-      <link href="/post/d2bee70b.html"/>
-      <url>/post/d2bee70b.html</url>
-      
-        <content type="html"><![CDATA[<h2 id="什么是ECS？产生背景和优势是什么？"><a href="#什么是ECS？产生背景和优势是什么？" class="headerlink" title="什么是ECS？产生背景和优势是什么？"></a>什么是ECS？产生背景和优势是什么？</h2><p>云厂商一般会将一台物理服务器分割为多个虚拟机，跟我们自己在VMware建立虚拟机是一个道理，每个虚拟机都有自己独立的操作系统、资源（CPU、内存、存储空间）和公网IP地址，这样的虚拟机就是VPS，虚拟专用服务器，但是VPS有一个缺点，就是不支持用户自主升降级，资源是预先分配好的并且不易于动态调整的，即如果你是1核1G的服务器，想要给他升级到2核2G的，在VPS中是实现不了的，但是如果加入自主升级降级的功能，就成了ECS（Elastic Compute Service，弹性计算服务），可以根据用户的需求随时调整CPU、内存、磁盘和带宽，所以被称为弹性服务器，这就是ECS产生的背景和优势，基于VPS不能自主升降级而产生ECS</p><h2 id="什么是安全组？有何作用？"><a href="#什么是安全组？有何作用？" class="headerlink" title="什么是安全组？有何作用？"></a>什么是安全组？有何作用？</h2><p>安全组是一种虚拟防火墙，能够控制ECS实例的出入站流量。安全组的入站方向控制ECS实例的入站流量，出方向控制ECS实例的出战流量，一般我们都对入站流量进行限制，而不限制出战流量，在安全组规则设定中，我们可以限制特定IP的访问，也可以限制特定端口是否开放，最好别把入站端口全部打开，因为我的服务器因为打开所有的入站规则三天被打了两次，如下是我的服务器安全组示例</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/660268872c10ed2f16edaa660a7bf897.png" alt="660268872c10ed2f16edaa660a7bf897"></p><p>授权IP就是允许访问的IP地址，<code>0.0.0.0/0</code>表示对所有IP都可以，即我没有对特定IP进行限制，端口范围即你想操作的端口，协议也可以进行选择，好好配置安全组，可以极小的减少自己服务器被攻击的可能性</p><h2 id="阿里云中什么是RAM，有何作用？"><a href="#阿里云中什么是RAM，有何作用？" class="headerlink" title="阿里云中什么是RAM，有何作用？"></a>阿里云中什么是RAM，有何作用？</h2><p>RAM（Resource Access Management），访问控制，是阿里云提供的管理用户身份与资源访问权限的服务。为什么要有这个访问控制的出现呢？是因为在购买云上资源的时候，会给购买者串账号密码，以方便云服务器对访问者进行鉴权，这对于个人云上资源是没有任何问题的，但是如果是一个大型公司的云上资源，倘若不做权限控制的话，仅仅靠一个账号密码就能拿下整个云上资源，那么这个时候对于公司来说就不敢轻易把这个账号密码告诉自己的所有员工，不然很容易就造成泄露。这个时候我们的RAM就发挥了作用，通过访问控制，我们可以灵活地设置员工的权限，甚至可以限制员工的登录环境，如下图所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240720152749381.png" alt="image-20240720152749381"></p><p>同样允许员工创建自己的私有数据空间以保证自己的数据的安全，允许我们按照权限进行分组，等等，方便我们更好的使用云安全，保障云上数据的安全</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240720153029863.png" alt="image-20240720153029863"></p><h2 id="什么是OSS，有何作用和优势？"><a href="#什么是OSS，有何作用和优势？" class="headerlink" title="什么是OSS，有何作用和优势？"></a>什么是OSS，有何作用和优势？</h2><p>阿里云对象存储服务（Object Storage Service，简称 OSS），OSS具有与平台无关的RESTful API接口，我们可以在任何应用、任何时间、任何地点存储和访问任意类型的数据，与自建存储相比，OSS存在易用性、持久性、数据安全等方面的优势，下面直接复制阿里云的官方文档</p><div class="table-container"><table><thead><tr><th style="text-align:center"><strong>对比项</strong></th><th><strong>对象存储OSS</strong></th><th><strong>自建服务器存储</strong></th></tr></thead><tbody><tr><td style="text-align:center">易用性</td><td>提供标准的RESTful API接口、丰富的SDK包、客户端工具、控制台。您可以像使用文件一样方便地上传、下载、检索、管理用于Web网站或者移动应用的海量数据。不限制存储空间大小。您可以根据所需存储量无限扩展存储空间，解决了传统硬件存储扩容问题。支持流式写入和读取。适合视频等大文件的同步读写业务场景。支持数据生命周期管理。您可以通过设置生命周期规则，将到期数据批量删除或者转储为更低成本的低频访问、归档存储、冷归档存储或者深度冷归档存储。</td><td>存储受硬盘容量限制，需人工扩容。不支持流式写入和读取。手动删除数据。</td></tr><tr><td style="text-align:center">持久性</td><td>OSS作为阿里巴巴全集团数据存储的核心基础设施，多年支撑双11业务高峰，历经高可用与高可靠的严苛考验。OSS的多重冗余架构设计，为数据持久存储提供可靠保障。同时，OSS基于高可用架构设计，消除单点故障，确保数据业务的持续性。服务可用性最高可达99.995%。数据设计持久性最高可达99.9999999999%（12个9）。规模自动扩展，不影响对外服务。OSS会通过计算网络流量包的校验和，验证数据包在客户端和服务端之间传输中是否出错，保证数据完整传输。OSS针对对象的操作具有强一致性。当对象上传或复制成功时，即可立即读取，且冗余写入多个设备。采用数据冗余存储机制，将每个对象的不同冗余存储在同一个区域内多个设施的多个设备上，确保硬件失效时的数据持久性和可用性。当数据存入OSS后，OSS会检测和修复丢失的冗余，确保数据持久性和可用性。OSS会周期性地通过校验等方式验证数据的完整性，及时发现因硬件失效等原因造成的数据损坏。当检测到数据有部分损坏或丢失时，OSS会利用冗余数据重建并修复损坏数据。</td><td>受限于硬件持久性，易出问题，当出现磁盘坏道时，容易出现不可逆转的数据丢失。人工数据恢复困难、耗时、耗力。</td></tr><tr><td style="text-align:center">数据安全</td><td>提供企业级多层次安全防护，包括服务端加密、客户端加密、防盗链、通过Bucket Policy限制IP黑白名单访问、细粒度权限管控、STS和URL鉴权与授权机制、WORM特性、日志审计等。提供用户级别资源隔离机制和多集群同步机制，支持异地容灾机制。支持基于SSL和TLS的HTTPS加密传输，有效防止数据在云端的潜在安全风险。提供版本控制功能，防止文件被误删除或覆盖而造成数据丢失。获得多项合规认证，包括SEC、FINRA等，满足企业数据安全与合规要求。</td><td>需要另外购买清洗和黑洞设备。需要单独实现安全机制。</td></tr><tr><td style="text-align:center">成本</td><td>可通过多线BGP接入运营商骨干网线路，带宽资源充足，上行流量免费。无需运维人员与托管费用，0成本运维。</td><td>存储受硬盘容量限制，需人工扩容。单线或双线接入速度慢，有带宽限制，峰值时期需人工扩容。需专人运维，成本高。</td></tr><tr><td style="text-align:center">智能存储</td><td>提供多种数据处理能力，例如图片处理、视频截帧、文档预览、图片场景识别、SQL查询等，并无缝对接Hadoop生态以及阿里云函数计算、EMR、DataLakeAnalytics、BatchCompute、MaxCompute、DBS等产品，满足企业数据分析与管理的需求。</td><td>需要额外采购，单独部署。</td></tr><tr><td style="text-align:center">加速访问</td><td>互联网访问加速：提供传输加速服务，可优化互联网传输链路和协议栈，大幅减少数据远距离传输超时的比例，极大地提升用户上传和下载体验。更多信息，请参见<a href="https://help.aliyun.com/zh/oss/user-guide/enable-transfer-acceleration#concept-1813960">传输加速</a>。内容加速分发：OSS作为源站，搭配CDN进行内容分发，提升同一个文件被重复下载的体验。</td><td>不支持。</td></tr></tbody></table></div><h2 id="AccessKey泄露有何风险？"><a href="#AccessKey泄露有何风险？" class="headerlink" title="AccessKey泄露有何风险？"></a>AccessKey泄露有何风险？</h2><p>AccessKey即访问密钥，相当于登陆密码，只是使用的场景不同，密码用于登录云服务器的控制面板，而AccessKey用于其他程序调用云服务API，如果不调用API，我们就不需要创建AccessKey</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/p45369.png" alt="新建用户AccessKey"></p><p>AccessKey泄露最大的风险就是自己的云上资源丢失，云服务器的权限被别人恶意接管，所以保护好自己的AccessKey非常重要，千万不要把其写进代码中</p><h2 id="什么是SSRF漏洞？"><a href="#什么是SSRF漏洞？" class="headerlink" title="什么是SSRF漏洞？"></a>什么是SSRF漏洞？</h2><p>SSRF（Server Side Request Forgery，服务端请求伪造）是一种由攻击者构造形成由服务端发起请求的一个安全漏洞，一般情况下，SSRF的攻击目标是从外网无法访问的内部系统，由于内网难以进行攻击，所以一般要由服务端进行发起</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/b53de209637a4a88853e1762d639b5d3.png" alt="在这里插入图片描述"></p><p>SSRF形成的原因大都是由于服务端提供了从其他服务器应用获取数据的功能而没有对目标地址做过滤和限制，黑客操作服务端从指定URL地址获取网页文本内容，加载指定地址的图片，下载等等。利用的是服务端的请求伪造。ssrf是利用存在缺陷的web应用作为代理攻击远程和本地的服务器</p><h2 id="阿里云中SSRF漏洞的危害是什么？修复思路？"><a href="#阿里云中SSRF漏洞的危害是什么？修复思路？" class="headerlink" title="阿里云中SSRF漏洞的危害是什么？修复思路？"></a>阿里云中SSRF漏洞的危害是什么？修复思路？</h2><p><strong>危害</strong>：SSRF的主要危害就是会造成控制台权限被接管，进而造成权限丢失，数据丢失等</p><p><strong>主要问题及修复思路：</strong></p><ol><li><p>应用存在漏洞，需要修补应用漏洞。</p></li><li><p>RAM 角色权限过大，导致可以通过该角色的权限进行创建子用户以及给子用户授予高权限等操作</p><p>整改：在为 RAM 角色赋予权限时，避免赋予过高的权限，只赋予自己所需要的权限。</p></li><li><p>元数据未做加固访问，导致一旦目标存在 SSRF 漏洞，元数据就存在被获取的风险。</p><p>整改：在「系统配置」的「高级选项」中将「实例元数据访问模式」设置为「仅加固模式」</p></li></ol>]]></content>
-      
-      
-      <categories>
-          
-          <category> 网络攻防 </category>
-          
-          <category> 云安全 </category>
-          
-          <category> 笔记 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 云安全 </tag>
-            
-            <tag> SSRF </tag>
             
         </tags>
       
