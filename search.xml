@@ -249,9 +249,9 @@
       
         <tags>
             
-            <tag> sqlmap </tag>
-            
             <tag> 编码注入 </tag>
+            
+            <tag> sqlmap </tag>
             
         </tags>
       
@@ -280,11 +280,11 @@
       
         <tags>
             
+            <tag> sqlmap </tag>
+            
             <tag> Oracle </tag>
             
             <tag> Mongodb </tag>
-            
-            <tag> sqlmap </tag>
             
         </tags>
       
