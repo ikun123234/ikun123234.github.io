@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title>零信任技术之fwknop单包认证敲门</title>
+      <link href="/post/3e117185.html"/>
+      <url>/post/3e117185.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="实验背景"><a href="#实验背景" class="headerlink" title="实验背景"></a>实验背景</h2><p>服务器某个端口服务受到防火墙的保护情况下，外界机器无法访问该端口上的服务</p><h2 id="实验目的"><a href="#实验目的" class="headerlink" title="实验目的"></a>实验目的</h2><p>通过在服务器和客户机上分别部署feknop敲门服务端和敲门客户端并进行配置，可以只让授权的客户端所在的机器敲开服务器的受保护的22号端口</p><h2 id="实验准备"><a href="#实验准备" class="headerlink" title="实验准备"></a>实验准备</h2><p>需要有两台Linux虚拟机，我这里其中一台为Ubuntu，一台为kali，我们以kali作为服务器，以Ubuntu作为客户机，要让Ubuntu想办法敲开Linux的22号端口</p><h3 id="客户机安装配置fwknop客户端"><a href="#客户机安装配置fwknop客户端" class="headerlink" title="客户机安装配置fwknop客户端"></a>客户机安装配置fwknop客户端</h3><p>使用命令下载fwknop-客户机</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo apt update</span><br><span class="line">sudo apt install fwknop-client</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721142010114.png" alt="image-20240721142010114"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721145015032.png" alt="image-20240721145015032"></p><p>生成敲门凭证（<strong>千万不要加sudo，如果是root用户，请切换为普通用户</strong>）</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">fwknop -A tcp/22 -a xxx -D yyy --key-gen --use-hmac 1 --save-rc-stanza</span><br></pre></td></tr></table></figure><p>其中xxx替换为我们的Ubuntu的ip，yyy替换为服务器的ip，我们首先用<code>ifconfig</code>查看一下我们的服务端和客户端的ip</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721145300342.png" alt="image-20240721145300342"></p><p>比如我的是这样的</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">fwknop -A tcp/22 -a 192.168.153.133 -D 192.168.153.129 --key-gen --use-hmac 1 --save-rc-stanza</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721150322476.png" alt="image-20240721150322476"></p><p>这会在我们的家目录下生成一个.fwknoprc文件，我们进入下面的目录，并在<code>/home/borgeous</code>下提取这个文件内容里面的HMAC验证码以及密码的base64编码</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/borgeous</span><br><span class="line">grep KEY .fwknoprc</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721151037418.png" alt="image-20240721151037418"></p><p>将这两个复制下来，以避免后续重新创建，这两个值改变</p><h3 id="服务器安装配置"><a href="#服务器安装配置" class="headerlink" title="服务器安装配置"></a>服务器安装配置</h3><p>首先确保服务器已经启动sshd服务</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl status ssh</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721151236318.png" alt="image-20240721151236318"></p><p>这里代表着我们的ssh服务已经开启</p><p>接下来我们在服务器上安装、配置fwknop-server，我们使用如下命令进行安装</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo apt update</span><br><span class="line">sudo apt install fwknop-server</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721151511423.png" alt="image-20240721151511423"></p><p>执行命令配置两个文件：</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/fwknop/access.conf</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721152723451.png" alt="image-20240721152723451"></p><p>清空配置文件，再添加如下内容</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">SOURCE ANY</span><br><span class="line">REQUIRE_SOURCE_ADDRESS Y</span><br><span class="line">OPEN_PORTS tcp/22, tcp/80, udp/22, udp/80</span><br><span class="line">FW_ACCESS_TIMEOUT 20</span><br><span class="line">KEY_BASE64 vJQ0gldvD73JBWqzk2cU0oOF/S0P5fohSrvRB1l3H3g=</span><br><span class="line">HMAC_KEY_BASE64</span><br><span class="line">knXk7/TDbowujaJEKIxAt4lW4yuq2PvYxEwv0oFpsiUtyVLVVML1vCzlc08SHPJa+kLctKb6ci1CGjO3W6+cQw==</span><br></pre></td></tr></table></figure><p>其中的key和hmackey的base64编码替换成客户端的，这样就配置好了客户端敲门凭证</p><p>接下来我们使用ip address获取服务器的ip和网卡名</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721154538022.png" alt="image-20240721154538022"></p><p>如上，服务器IP为192.168.153.129，网卡名叫eth0，服务器配置另外一个文件</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/fwknop/fwknopd.conf</span><br></pre></td></tr></table></figure><p>把里面东西全删了，输入以下内容</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">PCAP_INTF eth0;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721155448147.png" alt="image-20240721155448147"></p><h3 id="服务器配置防火墙"><a href="#服务器配置防火墙" class="headerlink" title="服务器配置防火墙"></a>服务器配置防火墙</h3><p>使用如下命令：</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo iptables -I INPUT 1 -i eth0 -p tcp --dport 22 -j DROP</span><br><span class="line">sudo iptables -I INPUT 1 -i eth0 -p tcp --dport 22 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT</span><br></pre></td></tr></table></figure><p>如上命令实现入站规则无法使用tcp协议连通22端口，也就是ssh服务</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721160110649.png" alt="image-20240721160110649"></p><p>当启动之后，我们的xshell立即就停用了</p><h3 id="确认配置正常"><a href="#确认配置正常" class="headerlink" title="确认配置正常"></a>确认配置正常</h3><p>在服务端，输入命令启动fwknop服务</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo fwknopd</span><br></pre></td></tr></table></figure><p>再次使用这个命令，有输出代表配置正常，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721160402830.png" alt="image-20240721160402830"></p><h2 id="效果确认"><a href="#效果确认" class="headerlink" title="效果确认"></a>效果确认</h2><p>客户端连接服务器sshd服务，发现无法连接</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh 192.168.153.129</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721162602661.png" alt="image-20240721162602661"></p><p>一直卡在这里不动了，代表我们拒绝了ssh服务</p><p>我们尝试敲门后连接，在客户端输入命令以进行敲门，也不要加sudo</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">fwknop -n 192.168.153.129</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721162924751.png" alt="image-20240721162924751"></p><p>我们再ssh该用户，发现成功</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240721163847023.png" alt="image-20240721163847023"></p><p>实验到此结束</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 云安全 </category>
+          
+          <category> 实战 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> fwknop </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>川大实训-认识、了解云安全</title>
       <link href="/post/d2bee70b.html"/>
       <url>/post/d2bee70b.html</url>
@@ -249,9 +278,9 @@
       
         <tags>
             
-            <tag> 编码注入 </tag>
-            
             <tag> sqlmap </tag>
+            
+            <tag> 编码注入 </tag>
             
         </tags>
       
@@ -280,11 +309,11 @@
       
         <tags>
             
-            <tag> sqlmap </tag>
-            
             <tag> Oracle </tag>
             
             <tag> Mongodb </tag>
+            
+            <tag> sqlmap </tag>
             
         </tags>
       
