@@ -4,6 +4,41 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞-文件上传之中间件解析、编辑器安全</title>
+      <link href="/post/2819e325.html"/>
+      <url>/post/2819e325.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="IIS6-0解析漏洞"><a href="#IIS6-0解析漏洞" class="headerlink" title="IIS6.0解析漏洞"></a>IIS6.0解析漏洞</h1><p>解析漏洞原理介绍：</p><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">1.当建立<span class="emphasis">*.asa、*</span>.asp格式的文件夹时，其目录下的任意文件都被IIS当作ASP文件进行解析</span><br><span class="line">2.当文件时<span class="emphasis">*.asp;1.jpg时，IIS6.0同样会将文件作为ASP文件进行解析，同时包括下面三种文件格式，也同样被当作asp文件进行执行</span></span><br><span class="line"><span class="emphasis">test.asa;1.jpg</span></span><br><span class="line"><span class="emphasis">test.cer;1.jpg</span></span><br><span class="line"><span class="emphasis">test.cdx;1.jpg</span></span><br></pre></td></tr></table></figure><p>我们以一个实例来进行演示，如下所示，当上传一个普通的文件的时候，我们发现保存的路径为<code>http://xxxxxxxx/xxxxxx.gif</code>，同时我们发现可疑值<code>filepath=/</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912171444085-671863753.png" alt="1645575239507-aa248cab-811e-4924-bf64-0e9867ea011b.png"></p><p>我们修改<code>filepath</code>的值，可以发现会进行地址拼接，所以我们可以利用这个点来进行构造asp解析文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803105948649.png" alt="image-20240803105948649"></p><p>我们将<code>filepath</code>的值修改为<code>x.asp;.</code>，再发包，会出现下面的情况</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803110135145.png" alt="image-20240803110135145"></p><p>此时我们成功触发asp的代码，IIS可以把其当作asp代码进行解析，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912171443162-1741469889.png" alt="1645576004256-c34d8a9f-a5fc-414b-9bfb-95b152b9e813.png"></p><p>当然我们也可以将<code>filepath</code>修改为<code>/x.asp/</code>，即构造一个asp目录，使得其目录内的文件全部被当作asp文件进行解析，但是这个要配合权限设置，即对方开启了创建目录的权限，否则无法利用这个漏洞</p><h1 id="Apache解析漏洞"><a href="#Apache解析漏洞" class="headerlink" title="Apache解析漏洞"></a>Apache解析漏洞</h1><h2 id="换行解析漏洞"><a href="#换行解析漏洞" class="headerlink" title="换行解析漏洞"></a>换行解析漏洞</h2><p>apache的换行解析漏洞的出现是由于apache在修复第一个后缀名解析漏洞的时候，使用正则表达式匹配后缀，在解析php时将xxx.php\x0A当作PHP后缀进行解析，导致绕过安全策略</p><h3 id="CVE-2017-15715漏洞复现"><a href="#CVE-2017-15715漏洞复现" class="headerlink" title="CVE-2017-15715漏洞复现"></a>CVE-2017-15715漏洞复现</h3><p>我们使用vulhub进行漏洞复现，在具有docker环境下的ubuntu或者kali进行搭建，搭建命令如下所示</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/vulhub/vulhub.git //拉取镜像</span><br><span class="line"><span class="built_in">cd</span> vulhub/httpd/CVE-2017-15715</span><br><span class="line">docker-compose up -d //启动容器</span><br></pre></td></tr></table></figure><p>找到8080端口，访问即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803160426625.png" alt="image-20240803160426625"></p><p>我们首先随便上传一个php文件，然后抓包看看是什么情况</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803160807482.png" alt="image-20240803160807482"></p><p>当我们提交一个php文件的时候，会给我们返回一个badfile，即我们上传不上去，这里我们利用换行解析进行绕过，如下所示，我们首先切换到HEX模式，在<code>evil.php</code>后面添加一个换行符，即<code>0a</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803161205867.png" alt="image-20240803161205867"></p><p>点击发送，发现不返回<code>badfile</code>，证明我们成功绕过</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803161311341.png" alt="image-20240803161311341"></p><p>我们去访问这个文件，输入<code>evil.php%0a</code>，成功上传</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803161557160.png" alt="image-20240803161557160"></p><h2 id="多后缀解析漏洞"><a href="#多后缀解析漏洞" class="headerlink" title="多后缀解析漏洞"></a>多后缀解析漏洞</h2><p>Apache解析文件的规则是从右往左开始判断解析，如果后缀名为不可识别文件解析，就再从左往右进行判断。比如<code>test.php.a.b</code>的<code>.a</code>和<code>.b</code>这两种后缀是apache不可识别的，所以apache会将其解析成<code>test.php</code></p><p>影响版本：apache 1.x        apache 2.2.x</p><p>下面以一个实例进行演示</p><h3 id="apache-parsing-vulnerability复现"><a href="#apache-parsing-vulnerability复现" class="headerlink" title="apache_parsing_vulnerability复现"></a>apache_parsing_vulnerability复现</h3><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803163207241.png" alt="image-20240803163207241"></p><p>我们首先看到apache版本号，初步判断有文件上传漏洞</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803163435831.png" alt="image-20240803163435831"></p><p>我们将文件命名加上<code>.jpg</code>，发现成功上传，访问该文件，发现apache将其当作php文件进行执行</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803163536767.png" alt="image-20240803163536767"></p><p>当然，如果要保证这个效果，还需要我们上传之后不会对其进行重命名，否则该漏洞也失效，即不会对<code>attack.php</code>进行重命名</p><h1 id="Nginx文件上传漏洞"><a href="#Nginx文件上传漏洞" class="headerlink" title="Nginx文件上传漏洞"></a>Nginx文件上传漏洞</h1><h2 id="Nginx文件名逻辑漏洞"><a href="#Nginx文件名逻辑漏洞" class="headerlink" title="Nginx文件名逻辑漏洞"></a>Nginx文件名逻辑漏洞</h2><p>CVE-2013-4547漏洞是由于非法字符空格和截止符号导致Nginx在解析URL时的有限状态机混乱，导致攻击者可以通过一个非编码空格绕过后缀名限制</p><figure class="highlight http"><table><tr><td class="code"><pre><span class="line">http://xxxxxxxxx/123.png \0.php</span><br></pre></td></tr></table></figure><p>从代码层面来说，我们请求的url中<code>123.png[0x20][0x00].php</code>正好与location模块中的.php相匹配，但进入该模块后Nginx确认为请求的文件名是<code>123.png</code>，就设置其为script_name的值交给CGI进行解析，最终造成解析漏洞</p><p>影响版本：Nginx 0.8.41-1.4.3/1.5.0-1.5.7</p><h3 id="CVE-2013-4547漏洞复现"><a href="#CVE-2013-4547漏洞复现" class="headerlink" title="CVE-2013-4547漏洞复现"></a>CVE-2013-4547漏洞复现</h3><p>随便上传一个文件，查看ngnix版本号</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803170125049.png" alt="image-20240803170125049"></p><p>符合我们的影响版本范围，我们直接进行操作，将<code>20</code>改成<code>00</code>即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803170649346.png" alt="image-20240803170649346"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803170834185.png" alt="image-20240803170834185"></p><p>成功上传，我们访问一下试试</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803171218858.png" alt="image-20240803171218858"></p><h2 id="Nginx解析漏洞"><a href="#Nginx解析漏洞" class="headerlink" title="Nginx解析漏洞"></a>Nginx解析漏洞</h2><p>对于任意文件名，在后面添加<code>/abc.php</code>（abc为任意字符）后，即可将文件作为php解析</p><p>Nginx的解析漏洞的出现和Nginx的版本没有关系，漏洞的产生是由于php配置问题导致的。</p><p> 影响的范围：全版本 Nginx拿到文件路径（URI）<code>/test.jpg/abc.php</code>后，一看后缀是.php，便认为该文件是php文件，转交给 php去处理。php一看<code>/test.jpg/abc.php</code>不存在，便删去最后的<code>/abc.php</code>，又看<code>/test.jpg</code>存在，便 把<code>/test.jpg</code>当成要执行的文件了</p><h3 id="nginx-parsing-vulnerability复现"><a href="#nginx-parsing-vulnerability复现" class="headerlink" title="nginx_parsing_vulnerability复现"></a>nginx_parsing_vulnerability复现</h3><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803171841899.png" alt="image-20240803171841899"></p><p>首先限制了我们上传图片，我们试着能不能通过MIME进行绕过</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803171922225.png" alt="image-20240803171922225"></p><p>MIME可以绕过第一层，但是还是会检测后缀，这个时候就要利用解析漏洞了</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803172039700.png" alt="image-20240803172039700"></p><p>我们首先上传一个png，然后在访问的时候在后面随机加上php后缀文件，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240803172158431.png" alt="image-20240803172158431"></p><p>成功利用</p><h1 id="Ueditor文件上传安全"><a href="#Ueditor文件上传安全" class="headerlink" title="Ueditor文件上传安全"></a>Ueditor文件上传安全</h1><p>主要是编辑器是否存在漏洞，跟源码和中间件无关，我们首先要看哪里有上传点，看到哪里有上传点后，看编辑器的类型是哪一种，然后找历史漏洞，现在一般也很少见了</p><p>具体利用过程参考这一篇文章：</p><p><a href="https://www.cnblogs.com/hei-zi/p/13394764.html">Ueditor上传漏洞复现+环境搭建 - 黑岗0x0001 - 博客园 (cnblogs.com)</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> 文件上漏洞 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 文件上传 </tag>
+            
+            <tag> 中间件解析漏洞 </tag>
+            
+            <tag> 编辑器安全 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>WEB攻防-通用漏洞-文件上传之二次渲染、变异免杀、日志包含</title>
       <link href="/post/f11a355.html"/>
       <url>/post/f11a355.html</url>
@@ -400,7 +435,7 @@
     
     
     <entry>
-      <title>WEB攻防-通用漏洞—SQL注入（一）</title>
+      <title>WEB攻防-通用漏洞-SQL注入（一）</title>
       <link href="/post/c970b753.html"/>
       <url>/post/c970b753.html</url>
       
