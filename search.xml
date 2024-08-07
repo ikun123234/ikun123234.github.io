@@ -4,6 +4,43 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞-XSS跨站之特殊类型XSS</title>
+      <link href="/post/106d471e.html"/>
+      <url>/post/106d471e.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="MXSS"><a href="#MXSS" class="headerlink" title="MXSS"></a>MXSS</h1><p>MXSS，也称为变异性的XSS，简单来说，MXSS原本的Payload是无害的，并不会产生XSS，但是由于一些特殊的原因，如反编码等导致Payload发生变异进而导致XSS，遇见的几率很小，老版本的QQ曾经有这个漏洞，但是已经被修复了，所以这种类型的XSS的参考意义也不大，了解即可。</p><h1 id="UXSS"><a href="#UXSS" class="headerlink" title="UXSS"></a>UXSS</h1><p>UXSS是利用浏览器或者浏览器扩展漏洞来制造产生XSS并执行代码的一种攻击类型，这种类型的漏洞通常不是网站的问题，而是浏览器自身存在这个问题。</p><p>相关示例视频可以参考这个：<a href="https://www.bilibili.com/video/BV1fX4y1c7rX/">【转载】MICROSOFT EDGE uXSS POC CVE-2021-34506_哔哩哔哩_bilibili</a></p><p>我们的源代码如下所示：</p><figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">b</span>&gt;</span><span class="tag">&lt;<span class="name">u</span>&gt;</span>行之在线测试 <span class="tag">&lt;/<span class="name">u</span>&gt;</span><span class="tag">&lt;/<span class="name">b</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line"> </span><br><span class="line">Políticas de Privacidade</span><br><span class="line">Usaremos seus dados pessoais para resolver disputas, solucionar problemas e aplicar nossos Termos e Condições de Uso.</span><br><span class="line"> </span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line"> </span><br><span class="line">Para prevenir abusos no app/site, o Badoo usa decisões automáticas e moderadores para bloquear contas, como parte de seu procedimento de moderação. Para isso, nós conferimos contas e mensagens para encontrar conteúdo que indicam quebra dos nossos Termos e Condições de Uso. Isso é feito através de uma</span><br><span class="line"> </span><br><span class="line"><span class="tag">&lt;<span class="name">b</span>&gt;</span><span class="tag">&lt;<span class="name">u</span>&gt;</span>OUR PAYLOAD IN TEXT FORM <span class="tag">&lt;/<span class="name">u</span>&gt;</span><span class="tag">&lt;/<span class="name">b</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line"> </span><br><span class="line">&quot;&gt;<span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">x</span> <span class="attr">onerror</span>=<span class="string">alert(1)</span>&gt;</span> </span><br><span class="line">//这里写Payload</span><br><span class="line"> </span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">Políticas de Privacidade</span><br></pre></td></tr></table></figure><p>这种漏洞的触发条件是<strong>低版本的edge浏览器</strong>，版本号为低于<code>91.0.864.37</code>，我们可以构造相关网站，放在该浏览器下进行访问</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172231083-1755041919.png" alt="1645841074481-e507a7e0-e315-45f0-b01f-c31b797c2f58.png"></p><p>我们访问该网站，发现并没有进行弹窗，我们接着点击翻译，把他翻译成其他语言</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172230723-721355510.png" alt="1645841323974-0891141c-0820-4df7-b88f-7ee3d90fb063.png"></p><p>我们发现出现了弹窗，证明存在XSS漏洞，而且XSS的产生原因是浏览器的翻译插件没有对跨站代码进行过滤，导致XSS漏洞的产生</p><h1 id="FlashXSS"><a href="#FlashXSS" class="headerlink" title="FlashXSS"></a>FlashXSS</h1><p>swf是小动画等一些视频类的后缀，swf是可以播放视频的，至于播放哪个视频是会给其传递相关参数的。同时，其可以接受JavaScript代码，通过JS代码来控制加载swf文件进行控制swf的播放。</p><p>我们接下来介绍如何进行审计这种漏洞，首先，这种我们一般都可以拿到源代码，因为我们可以进行反编译查看其源代码，所以我们侧重讲如何通过白盒进行发现该漏洞。</p><p>首先找到该swf文件，然后进行反编译，反编译工具链接：<a href="https://github.com/jindrapetrik/jpexs-decompiler">https://github.com/jindrapetrik/jpexs-decompiler</a></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172230862-820786520.png" alt="1645844202476-f586084b-37f9-4b40-a056-d44563b9439a.png"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172231394-166397314.png" alt="1645844477504-0b43d031-bf04-406e-acaa-7bf452c9ab11.png"></p><p>我们主要看的部分就是里面的脚本代码，我们直接全局搜索<code>ExternalInterface.call</code>，因为这是swf和js进行通信的关键函数，在swf中，<code>ExternalInterface.call</code>函数调用JavaScript代码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172230651-918011494.png" alt="1645845806189-45fabfb6-9f01-4917-a50d-825d5ce5f1ab.png"></p><p>这里的param2看着不像js代码，所以我们继续查找js代码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807110836782.png" alt="image-20240807110836782"></p><p>我们继续追踪变量jQuery</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807110946759.png" alt="image-20240807110946759"></p><p><code>loaderinfo.parameters</code>这里其实是在将参数传递给swf。这里我们就可以构造<code>jQuery=alert(1))&#125;catch(e)&#123;&#125;//</code>进行插入xss代码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172232030-2109644030.png" alt="1645847778423-3502370b-eb65-43b8-92d7-6fcc99c010e1.png"></p><h1 id="PDFXSS"><a href="#PDFXSS" class="headerlink" title="PDFXSS"></a>PDFXSS</h1><p>PDFXSS就更简单了，我们可以将XSS代码插入在PDF中，然后使用浏览器访问这个PDF就会造成弹窗</p><p>我们首先需要用到迅捷PDF编辑器，下载链接：<a href="https://www.xunjiepdf.com/editor">迅捷PDF编辑器 - 多功能的PDF编辑软件 (xunjiepdf.com)</a></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807112057512.png" alt="image-20240807112057512"></p><p>接着我们选择文件属性选项，插入JavaScript属性</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807112306359.png" alt="image-20240807112306359"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807112409658.png" alt="image-20240807112409658"></p><p>至此我们的一个XSSPDF就做好了，接着我们保存用浏览器进行打开</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807112703066.png" alt="image-20240807112703066"></p><p>成功触发XSS，当然我们也可以进行思维的发散，比如将其上传至腾讯文档等让人信任的链接，然后发送给别人进行访问，造成别人被xss攻击，当然，腾讯文档会对其进行过滤，如果没有过滤的话，就是腾讯文档有漏洞了。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> XSS跨站请求 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> MXSS </tag>
+            
+            <tag> UXSS </tag>
+            
+            <tag> FlashXSS </tag>
+            
+            <tag> PDFXSS </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>WEB攻防-通用漏洞-XSS跨站之基本概念</title>
       <link href="/post/d2cf6b55.html"/>
       <url>/post/d2cf6b55.html</url>
@@ -1347,9 +1384,9 @@
       
         <tags>
             
-            <tag> Web安全 </tag>
-            
             <tag> 加密解密 </tag>
+            
+            <tag> Web安全 </tag>
             
             <tag> 数据库 </tag>
             
