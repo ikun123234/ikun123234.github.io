@@ -4,6 +4,39 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞-CSRF、SSRF漏洞利用</title>
+      <link href="/post/b19495c8.html"/>
+      <url>/post/b19495c8.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="CSRF"><a href="#CSRF" class="headerlink" title="CSRF"></a>CSRF</h1><p>CSRF全称Cross-site request forgery，即跨站请求伪造，也被称为“One Click Attack”，通常缩写为CSRF或者XSRF，是一种对网站的恶意利用，举个最基本的例子，就是别人给你发了一个奇怪的链接，你点了之后虽然什么都没有输，但是自己的QQ号被盗取了，。即该攻击可以在受害者不知情的情况下以受害者名义伪造请求，执行恶意操作，具有比较大的危害性。</p><p>CSRF攻击的两个条件：</p><ol><li>目标用户已经登录了网站，能够执行网站的功能</li><li>目标用户访问了攻击者构造的URL</li></ol><p>CSRF黑盒判断的条件：</p><ol><li>看验证来源是否一致</li><li>看凭据是否有token</li><li>看关键操作是否有进行验证</li></ol><p>原理图如下所示：</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102058895-1443587387.png" alt="1646264151502-462246ae-7945-482e-904e-26c1aa20452a.png"></p><h2 id="后台自动添加管理员"><a href="#后台自动添加管理员" class="headerlink" title="后台自动添加管理员"></a>后台自动添加管理员</h2><p>当我们处在管理员后台界面的时候，即已登录状态</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813110518720.png" alt="image-20240813110518720"></p><p>之后点了别人发过来的url链接，<code>http://127.0.0.1:8081/web/add.html</code>，访问这个地址，我们可以发现我们的管理界面被添加了一个新的管理用户</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813110733548.png" alt="image-20240813110733548"></p><p>其实原理就是这个链接所代表的就是添加用户的数据包，当触发后，会以自己的浏览器将这个数据包发出去，然后后端就会认为是管理员进行了增加用户的操作，进而添加了这个用户，那么如何构造相关的数据包呢？这里我们要用到的就是<code>CSRFTester</code>，首先我们先在自己本地搭建一个对应的应用，然后模拟增添用户的操作，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102058330-1015894001.png" alt="1646287809235-be0a0c46-e043-4200-8aba-1936705fff3c.png"></p><p>这个时候我们在<code>CSRFTester</code>中点击start，该工具就会抓取我的数据包</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102058167-521141857.png" alt="1646287915691-0361a3cf-6b88-4738-b990-fc4777dc39ad.png"></p><p>然后我们将这个数据包保存为forms表单，然后生成为html格式，放在网站根目录<code>http://127.0.0.1:8081/web/add.html</code>，然后在登录状态下去访问该网站，我们发现可以实现CSRF攻击</p><h2 id="CSRF防护"><a href="#CSRF防护" class="headerlink" title="CSRF防护"></a>CSRF防护</h2><ol><li>看验证来源，也就是是否符合同源策略，看数据包的<code>referer</code>的值，确保数据包是从该网站上发出去的，而不是非法数据包，但是这个方法也很好绕过，因为如果修改<code>referer</code>的值，同源策略就失效了</li><li>看凭证是否带有token值，token值用来判断是不是同一个用户，每次操作一次就会更改一次token值，而且会在操作之前对比token值，<strong>token值可以有效地防御CSRF攻击</strong></li></ol><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813140636374.png" alt="image-20240813140636374"></p><p>这就是属于token不存在的情况，说明只要是这个用户就可以了，而下面这张图就说明了token存在</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813140917130.png" alt="image-20240813140917130"></p><ol><li>看关键操作有无验证，关键验证就好比修改密码的时候会验证你的用户名和密码</li></ol><h1 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h1><p>SSRF全程Server-Side Request Forgery，即服务器端请求伪造，是一种由攻击者构造形成由服务端发起请求的一个安全漏洞，一般情况下，SSRF攻击的目标是从外网无法访问的内部系统，正是因为它是由服务端发起的，所以它能够请求到与它相连而与外网隔离的内部系统，SSRF形成的原因大部分都是由于服务端提供了从其他服务器应用获取数据的功能且没有对目标地址做过滤与限制，其原理图如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102057953-1816848668.png" alt="1646264163213-66a6b56a-7e56-4f5c-962f-7e1e864bb22a.png"></p><p>SSRF可以被拿来做很多事，包括但不限于作为内网探针、读取服务器上的文件，比如我们请求地址为<code>http://127.0.0.1:3306</code>的时候，就是在探测其是否开放了数据库服务，以及可以获得数据库相关信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102058763-248624041.png" alt="1646292590568-78fba5f1-4001-41d2-91ba-ba56b36ede77.png"></p><h2 id="内网探针"><a href="#内网探针" class="headerlink" title="内网探针"></a>内网探针</h2><p>由于内网地址的开头一般是固定的，例如<code>192.168</code>开头，所以我们可以利用bp的爆破模式对内网进行探测，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102058919-1404511656.png" alt="1646294799804-abddedf9-1ddf-4ecc-a27e-16d9e6ea6e20.png"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/2504969-20230913102058970-1303040167.png" alt="1646294962499-66a65a50-1553-4020-98d8-bc3e6d81c85a.png"></p><p>通过观察返回的数据包，我们可以判断其是否存在内网，以及内网IP地址是什么</p><p>接下来以CTFHUB上的题进行相关演示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813144044100.png" alt="image-20240813144044100"></p><p>首先我们的题目告诉我们端口范围，所以我们直接进行脚本爆破</p><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">8000</span>,<span class="number">9001</span>):</span><br><span class="line">    url = <span class="string">f&#x27;http://challenge-951d929ab79bf81a.sandbox.ctfhub.com:10800/?url=127.0.0.1:<span class="subst">&#123;i&#125;</span>&#x27;</span></span><br><span class="line">    res = requests.get(url)</span><br><span class="line">    <span class="built_in">print</span>(i,res.text)</span><br></pre></td></tr></table></figure><p>保存后直接运行，最后我们可以得到相关的结果，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813145059547.png" alt="image-20240813145059547"></p><p>成功获取</p><h2 id="文件读取"><a href="#文件读取" class="headerlink" title="文件读取"></a>文件读取</h2><p>我们可以利用伪协议对服务器上的文件进行读取，例如：</p><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">file:///D:/www.txt</span><br><span class="line"><span class="built_in">dict</span>://<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">3306</span>/info</span><br><span class="line">ftp://<span class="number">192.168</span><span class="number">.46</span><span class="number">.148</span>:<span class="number">21</span></span><br></pre></td></tr></table></figure><p>我们也以CTFHUB上的例题来进行演示，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813145208833.png" alt="image-20240813145208833"></p><p>题目告诉我们要通过伪协议进行读取web目录下的flag.php，我们知道，web目录一般为<code>var/www/html/flag.php</code>，所以我们直接读取<code>file:///var/www/html/flag.php</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240813145536404.png" alt="image-20240813145536404"></p><p>同样，我们可以让服务器自己下载我们准备好的木马，然后进攻内网，这里也不再赘述</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> CSRF&amp;SSRF </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> CSRF </tag>
+            
+            <tag> SSRF </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>WEB攻防-通用漏洞-XSS绕过与修复</title>
       <link href="/post/54325f93.html"/>
       <url>/post/54325f93.html</url>
@@ -271,9 +304,9 @@
       
         <tags>
             
-            <tag> 云安全 </tag>
-            
             <tag> SSRF </tag>
+            
+            <tag> 云安全 </tag>
             
         </tags>
       
