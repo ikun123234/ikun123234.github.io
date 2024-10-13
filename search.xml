@@ -4,6 +4,41 @@
   
     
     <entry>
+      <title>WEB攻防-通用漏洞-CRLF注入&amp;URL重定向&amp;资源处理拒绝服务</title>
+      <link href="/post/fb3d5737.html"/>
+      <url>/post/fb3d5737.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="CRLF注入"><a href="#CRLF注入" class="headerlink" title="CRLF注入"></a>CRLF注入</h1><p>CRLF注入漏洞发生在应用程序未能正确过滤用户输入中的回车（CR，\r，%0d）和换行（LF，\n，%0a）字符时。在HTTP协议中，HTTP头部字段和正文之间通过一个CRLF序列分隔，每个头部字段之间也通过CRLF序列分隔。攻击者可以利用这一点，在响应头中插入新的头部字段，或者在响应正文中插入内容。</p><p>接下来举个例子，当我们请求www.baidu.com的时候，请求头是这样的：</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GET / HTTP/1.1</span><br><span class="line"> </span><br><span class="line">Host：www.baidu.com</span><br></pre></td></tr></table></figure><p>当我们请求www.baidu.com/search的时候，请求头会变成这样：</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GET /search HTTP/1.1</span><br><span class="line"> </span><br><span class="line">Host：www.baidu.com</span><br></pre></td></tr></table></figure><p>当我们恶意插入换行符号且网站并没对换行符号过滤的时候，就可以将请求写成www.baidu.com/search%0Host:www.hack.com，这样我们的请求头就会变成</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GET /search HTTP/1.1</span><br><span class="line">Host: www.hack.com</span><br><span class="line">Host：www.baidu.com</span><br></pre></td></tr></table></figure><p>这时候就会出现两种情况：</p><p>1.访问www.hack.com</p><p>2.报错</p><p>接下来我们就用一个实际靶场案例来进行演示，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013164311734.png" alt="image-20241013164311734"></p><p>我们进行抓包，抓包情况如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013164909507.png" alt="image-20241013164909507"></p><p>然后我们进行修改，加入<code>%0aSet-cookie:JSPSESSID%3Dhacker</code>，然后再进行发送</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/7c6c19d404b68cacb1e52bc30307ee31.png" alt="7c6c19d404b68cacb1e52bc30307ee31"></p><p>我们可以看到成功被添加了一个Cookie值，当然，用的最多的是配合xss漏洞，我们直接在页面上生成一个xss语句</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">0d%0a%0d%0a&lt;img src=1 οnerrοr=alert(/xss/)&gt;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013165505822.png" alt="image-20241013165505822"></p><p>这里也介绍一个批量测试工具：<a href="https://github.com/dwisiswant0/crlfuzz/releases，访问这个地址即可，可以获取crlfuzz测试工具">https://github.com/dwisiswant0/crlfuzz/releases，访问这个地址即可，可以获取crlfuzz测试工具</a></p><h1 id="URL重定向"><a href="#URL重定向" class="headerlink" title="URL重定向"></a>URL重定向</h1><p>URL重定向就更为简单了，即在访问的URL中，会出现类似于<code>/?url=xxxx</code>的形式，这个时候就会直接跳转到后面所指向的url地址</p><p>例如，在以下url中，我们尝试访问原有url，会自动跳转到后面所指向的url地址</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.njau.edu.cn/njau_db/weburl.php?resource_id=189&amp;resource_name=IET英国工程技术学会&amp;urlnames=资源地址&amp;url=http%3A%2F%2Fwww.ietdl.org%2F</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013172003946.png" alt="image-20241013172003946"></p><p>我们尝试将后面的修改为www.baidu.com，观察是否会自动跳转到我们的百度</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013172136592.png" alt="image-20241013172136592"></p><p>成功跳转，所以存在url重定向漏洞，至于这个漏洞有啥用，我们的登录验证一般都存在url重定向，我们只需将对应的url替换成我们制作的钓鱼网页，就可以实现盗取用户的登录账号密码，所以危害还是蛮大的，这也是为什么现在大家都把登录验证方式改成了验证码登录吧，会稍微安全一点</p><p>我们这里使用Google语法找到一个具有该性质的登录网站，经过测试，存在url重定向的漏洞，我们同时制作一个钓鱼网页进行替换</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Google语法：</span><br><span class="line">inurl:login url=http:// edu.cn</span><br><span class="line">url地址:</span><br><span class="line">https://db.njau.edu.cn/njau_db/weburl.php?resource_id=300&amp;resource_name=%E8%AE%BA%E6%96%87%E6%94%B6%E5%BD%95%E5%BC%95%E8%AF%81%E6%95%B0%E6%8D%AE%E5%BA%93%EF%BC%88%E5%8F%82%E8%80%83%E5%92%A8%E8%AF%A2%E9%83%A8%E4%B8%93%E7%94%A8%EF%BC%89&amp;urlnames=&amp;url=http%3A%2F%2Flwyz.yun.smartlib.cn%2Fwidgets%2Flogin%2F</span><br></pre></td></tr></table></figure><p>我们这里使用kali自带的setoolkit工具进行钓鱼网页的制作，具体操作步骤如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.setoolkit</span><br><span class="line">2.1</span><br><span class="line">3.2</span><br><span class="line">4.3</span><br><span class="line">5.2</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013175526513.png" alt="image-20241013175526513"></p><p>如下就是我们克隆出来的钓鱼网页，我们进行替换即可，替换后的url如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://db.njau.edu.cn/njau_db/weburl.php?resource_id=300&amp;resource_name=%E8%AE%BA%E6%96%87%E6%94%B6%E5%BD%95%E5%BC%95%E8%AF%81%E6%95%B0%E6%8D%AE%E5%BA%93%EF%BC%88%E5%8F%82%E8%80%83%E5%92%A8%E8%AF%A2%E9%83%A8%E4%B8%93%E7%94%A8%EF%BC%89&amp;urlnames=&amp;url=http://192.168.20.129/</span><br></pre></td></tr></table></figure><p>访问后直接跳转到我们的钓鱼网页，然后受害者就会在上面输入关键信息，我们就可以在kali上获取关键信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013175831510.png" alt="image-20241013175831510"></p><p>这就是一次完整的利用url重定向的社会工程学攻击</p><h1 id="WEB拒绝服务"><a href="#WEB拒绝服务" class="headerlink" title="WEB拒绝服务"></a>WEB拒绝服务</h1><p>这个漏洞原理也比较简单，但是没有什么利用价值，存在破坏价值，当我们上传的资源的大小是由我们决定的时候，我们就可以输入无限大的数值以造成资源的占有</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241013180158563.png" alt="image-20241013180158563"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> WEB攻防 </category>
+          
+          <category> 业务逻辑 </category>
+          
+          <category> 笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> CRLF注入 </tag>
+            
+            <tag> URL重定向 </tag>
+            
+            <tag> 资源处理拒绝服务 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>第一届“帕鲁杯”应急响应wp</title>
       <link href="/post/6e024654.html"/>
       <url>/post/6e024654.html</url>
