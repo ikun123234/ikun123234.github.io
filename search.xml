@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Vulnhub打靶-matrix_breakout_2_morpheus</title>
+      <link href="/post/f24d9297.html"/>
+      <url>/post/f24d9297.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p>靶机下载：<code>https://pan.baidu.com/s/1kz6ei5hNomFK44p1QT0xzQ?pwd=y5qh</code>提取码: y5qh</p><p>攻击机器：192.168.20.128（Windows操作系统）</p><p>靶机：192.168.20.0/24</p><p>目标：获取2个flag+root权限</p><h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>信息收集三板斧，nmap扫描+目录扫描，这里就不再赘述，直接贴结果，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016134758116.png" alt="image-20241016134758116"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016134824495.png" alt="image-20241016134824495"></p><p>由nmap的结果，我们可以知道靶机IP为<code>192.168.20.133</code>，开放的端口为<code>22,80,81</code>，我们首先对80端口进行探测，浏览器访问80端口，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016135109187.png" alt="image-20241016135109187"></p><p>页面大致意思就是告诉我们现在对于ssh服务我们不能利用，所以我们得从80端口寻找突破口，进而突破对ssh服务的限制，我们接下来进行路径扫描，这里真的得靠平时积累的字典了，扫到了就是扫到了，没扫到是真的寄了，我们这里使用gobuster进行路径扫描，使用kali自带的目录字典，输入的命令如下</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">gobuster dir -u http://192.168.20.133 -x php,txt,jsp,asp -w &quot;C:\Users\Administrator\Desktop\目录字典\directory-list-2.3-medium.txt&quot;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016140421647.png" alt="image-20241016140421647"></p><p>我们尝试访问<code>graffiti.php</code>，观察一下是否存在漏洞</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016140640159.png" alt="image-20241016140640159"></p><h2 id="漏洞初探"><a href="#漏洞初探" class="headerlink" title="漏洞初探"></a>漏洞初探</h2><p>看到框框，先想一想是否存在xss漏洞了，我们先尝试最基本的弹窗xss</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;script&gt;alert(1)&lt;/script&gt;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016141024413.png" alt="image-20241016141024413"></p><p>我们发现存在xss漏洞，而且这里有一个惊奇的发现，就是当我无论输入什么东西，都会出现弹窗</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016141325003.png" alt="image-20241016141325003"></p><p>说明这不是一个简单的反射型xss漏洞，而是一个存储型xss漏洞，而且我们写的东西都会重新出现在php页面中</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016141603016.png" alt="image-20241016141603016"></p><p>第一个想法是不是把东西全部存储在数据库里，然后再通过数据库全部取出来，我们通过抓包再去看看是什么情况</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016141945164.png" alt="image-20241016141945164"></p><p>我们发现这里通过POST传参将数据写入一个<code>graffiti.txt</code>文件中，这个时候我们就想能不能写<code>shell</code>了，但是<code>txt</code>并不能执行啊，这个时候我们试着将后面<code>file=graffiti.txt</code>改成<code>file=shell.php</code>，我们试着这样可不可行</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016142529448.png" alt="image-20241016142529448"></p><p>我们尝试访问<code>shell.php</code>看看是否创建成功</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016142625735.png" alt="image-20241016142625735"></p><p>我们发现成功创建，接下来我们直接进行反弹shell拿主机权限</p><h2 id="蚁剑连接"><a href="#蚁剑连接" class="headerlink" title="蚁剑连接"></a>蚁剑连接</h2><p>由于我这里反弹shell不成功，所以采用蚁剑进行连接，发现成功连接，第一件事先找flag</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016145104140.png" alt="image-20241016145104140"></p><p>我们在根目录下找到了一个FLAG.txt文件，我们点开来看看有什么信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016145249398.png" alt="image-20241016145249398"></p><p>这个flag提示我们去找到主机的密码，即我们要进行Linux提权</p><h2 id="Linux提权"><a href="#Linux提权" class="headerlink" title="Linux提权"></a>Linux提权</h2><p>我们首先上传一个脚本，一个非常著名的提权脚本<code>linpeas</code>，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016150259980.png" alt="image-20241016150259980"></p><p>我们直接通过蚁剑上传我们的脚本文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016150436443.png" alt="image-20241016150436443"></p><p>首先先给这个脚本一个运行权限，通过<code>chmod+x</code>进行权限赋予，然后直接运行这个脚本，不知道为什么蚁剑的终端执行不了这个脚本，我们还是反弹shell试试吧，详细的反弹shell操作可以看上一篇博客<a href="http://www.hackborgeous.top/post/45b9aa4c.html">Vulnhub打靶-admx_new | Borgeousのblog (hackborgeous.top)</a></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016152130003.png" alt="image-20241016152130003"></p><p>成功上线，我们再执行运行脚本的命令，这里需要注意的是，反弹shell最好反弹到linux主机上，不要用Windows的，不然会乱码，这也是我踩的坑之一</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016154421698.png" alt="image-20241016154421698"></p><p>我们找到了可以利用的系统漏洞，我们直接下载脚本进行运行即可</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/imfiver/CVE-2022-0847.git</span><br><span class="line">cd CVE-2022-0847</span><br><span class="line">chmod +x Dirty-Pipe.sh</span><br><span class="line">./Dirty-Pipe.sh</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016155252302.png" alt="image-20241016155252302"></p><p>成功获取root权限</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241016155406248.png" alt="image-20241016155406248"></p><p>第二个flag也成功获取</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Vulnhub打靶-admx_new</title>
       <link href="/post/45b9aa4c.html"/>
       <url>/post/45b9aa4c.html</url>
@@ -21,6 +52,14 @@
           
       </categories>
       
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
       
     </entry>
     
