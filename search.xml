@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Vulnhub打靶-Breakout</title>
+      <link href="/post/1aad57b9.html"/>
+      <url>/post/1aad57b9.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p>靶机下载：<code>https://download.vulnhub.com/empire/02-Breakout.zip</code></p><p>攻击机器：192.168.20.128（Windows操作系统）&amp; 192.168.20.138（kali）</p><p>提示信息：这台靶机被设计为简单难度的靶机，但如果你迷失方向，它可能会变成中等难度。</p><p>靶机：192.168.20.0/24</p><p>目标：获取2个flag+root权限</p><h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>老样子首先使用<code>arp-scan -l</code>对主机进行探活，发现主机IP为<code>192.168.20.145</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021112803260.png" alt="image-20241021112803260"></p><p>之后对开放的端口进行扫描，执行<code>nmap -O -sV -p- -A 192.168.20.145</code>，结果如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021113223105.png" alt="image-20241021113223105"></p><p>这里开放了80端口，说明还是从80端口进行渗透，我们首先访问80端口，结果如下</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021113254460.png" alt="image-20241021113254460"></p><p>首先还是进行后门路径的扫描吧，先使用默认字典进行扫描，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021113706094.png" alt="image-20241021113706094"></p><p>可以发现有一个<code>/manual/index.html</code>的路径，我们尝试访问</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021145159228.png" alt="image-20241021145159228"></p><p>这是一个Apache的官网，其域名的指向显示的也是apache的官网，显然是重定向到apache的官网上去了，所以这里也并没有什么有价值的信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021145401491.png" alt="image-20241021145401491"></p><p>同时我们在之前的端口扫描中可以发现其<code>10000</code>端口和<code>20000</code>同样开放了，且是http服务，我们尝试访问这两个端口，看看有没有什么关键信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021145917638.png" alt="image-20241021145917638"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021145932153.png" alt="image-20241021145932153"></p><p>我们可以发现是两个登录框，那么现在就是要找到账号密码登录进去即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021150145462.png" alt="image-20241021150145462"></p><p>我们在80端口页面的源码中找到了加密过的账号密码，即用户的账号密码泄露了，我们只要对这串字符进行解密就可以拿到登录的账号密码，然后我们就可以成功登录那两个页面。</p><h2 id="破解用户名"><a href="#破解用户名" class="headerlink" title="破解用户名"></a>破解用户名</h2><p>这是非常经典的<code>brainfuck</code>加密方式，我们拿去解密，发现这串密码为<code>.2uqPEfj3D&lt;P&#39;a-3</code>，但是我们还不知道用户名，这个时候我们采用burp对用户名进行爆破，但是发现请求过快会被服务器拒绝连接，所以也不能直接进行爆破</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021152214134.png" alt="image-20241021152214134"></p><p>我这里试着把请求速度改慢一点，发现还是不行，说明这里不适合用burp进行爆破，我们只能试着换其他方式，这里通过查看wp发现使用了一种新的信息收集工具，<code>enum4linux</code>，这个工具是一个枚举工具，是用于枚举windows和Linux系统上的SMB服务的工具，可以轻松的从与SMB服务有关的目标中快速提取信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021153643797.png" alt="image-20241021153643797"></p><p>同时在前期的信息收集的过程中，我们可以发现我们的主机同样开放了139端口和445端口，所以这里我们应该使用<code>enum4linux</code>进行信息的收集</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021154020807.png" alt="image-20241021154020807"></p><p>我们成功发现登录的用户名为cyber，接着我们尝试着去登录我们的两个网站，看看是否能有新的发现，我们只能登录usermin界面</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/4c9ec8fa39d2d9af2706e64783e7454c.png" alt="4c9ec8fa39d2d9af2706e64783e7454c"></p><p>我们发现这里可以使用命令行，我们尝试使用命令行对服务器进行控制，这里我们发现了第一个flag值</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021154735455.png" alt="image-20241021154735455"></p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">3mp!r3&#123;You_Manage_To_Break_To_My_Secure_Access&#125;</span><br></pre></td></tr></table></figure><h2 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h2><p>我们发现该目录下有一个可执行文件<code>tar</code>，在这里放一个可执行文件肯定有其深意，我们还是先用<code>linpeas.sh</code>进行相关信息查询</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021155900149.png" alt="image-20241021155900149"></p><p>我们发现没有办法成功运行，这个时候我们尝试去找和pass有关的文件</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">find / -name &#x27;*pass*&#x27; 2&gt;/dev/null</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/3b0ca380072842218807e1931674dd99.png" alt="3b0ca380072842218807e1931674dd99"></p><p>我们在这里成功发现了一个密码的备份文件，我们尝试用tar去压缩这个文件，然后再解压这个文件，这样把其移动到我们cyber用户的根目录下，然后把这个文件解压出来，再试试能不能获取其中的内容</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">./tar -czvf pass.tar.gz /var/backups/.old_pass.bak</span><br><span class="line">./tar -xzvf pass.tar.gz</span><br><span class="line">cat var/backups/.old_pass.bak</span><br></pre></td></tr></table></figure><p>我们成功获得了root的密码，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021161635071.png" alt="image-20241021161635071"></p><p>接下来切换root模式即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021161812213.png" alt="image-20241021161812213"></p><p>但是还有一个问题，就是在这个界面没办法直接切换为root，所以我们再进行一步反弹shell即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021162057904.png" alt="image-20241021162057904"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241021162653485.png" alt="image-20241021162653485"></p><p>成功找到第二个flag</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">3mp!r3&#123;You_Manage_To_BreakOut_From_My_System_Congratulation&#125;</span><br></pre></td></tr></table></figure><h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol><li>brainfuck加密</li><li>enum4linux收集SMB服务信息，139和445端口对应SMB服务</li><li>使用tar命令将没有权限的文件转移到有权限的目录进行读取</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Vulnhub打靶-napping</title>
       <link href="/post/5c352bf4.html"/>
       <url>/post/5c352bf4.html</url>
