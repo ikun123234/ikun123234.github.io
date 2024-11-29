@@ -4,6 +4,39 @@
   
     
     <entry>
+      <title>红日靶场-5</title>
+      <link href="/post/877c20e5.html"/>
+      <url>/post/877c20e5.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h1><p>这个靶场相对于前几个靶场来说较为简单，只有两台靶机，其中一台主机是win7，作为我们的DMZ区域的入口机，另外一台是windows2008，作为我们的域控主机，所以我们只需要给我们的win7配置两张网卡，给我们的Windows2008配置一张网卡即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/bc4832bfe1bbbfd2e8c5c64b7bea9d33.png" alt="bc4832bfe1bbbfd2e8c5c64b7bea9d33"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/609ab78fd7df59d287b0abfdf4bdb94f.png" alt="609ab78fd7df59d287b0abfdf4bdb94f"></p><p>我们的IP地址如下所示</p><div class="table-container"><table><thead><tr><th style="text-align:center">机器名称</th><th style="text-align:center">内网IP</th><th style="text-align:center">外网IP</th></tr></thead><tbody><tr><td style="text-align:center">攻击机（kali）</td><td style="text-align:center"></td><td style="text-align:center">192.168.20.143</td></tr><tr><td style="text-align:center">win7</td><td style="text-align:center">192.168.138.136</td><td style="text-align:center">192.168.20.146</td></tr><tr><td style="text-align:center">Windows2008（DC）</td><td style="text-align:center">192.168.138.138</td></tr></tbody></table></div><p>我们的各机器账号密码如下所示</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">win7</span><br><span class="line">sun\heart 123.com</span><br><span class="line">sun\Administrator dc123.com</span><br><span class="line"></span><br><span class="line">windows2008</span><br><span class="line">sun\admin 2020.com</span><br></pre></td></tr></table></figure><p>记得进入win7打开phpstudy开启web服务</p><h1 id="外网环境探测"><a href="#外网环境探测" class="headerlink" title="外网环境探测"></a>外网环境探测</h1><p>首先我们使用nmap和fscan进行全网段扫描，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/fscan.png" alt="fscan"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/nmap.png" alt="nmap"></p><p>我们发现这里的web服务是thinkphp5.x版本，且fscan帮我们检测出来了存在rce漏洞，我们直接利用thinkphp利用工具进行rce，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/thinkphp.png" alt="thinkphp"></p><p>我们选择好漏洞版本，然后点击getshell即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/getshell.png" alt="getshell"></p><p>我们发现我们这里自动帮我们上传了一个php脚本，我们直接用蚁剑进行连接即可</p><h2 id="上线cs"><a href="#上线cs" class="headerlink" title="上线cs"></a>上线cs</h2><p>我们在cs创建一个监听器，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129214438764.png" alt="image-20241129214438764"></p><p>我们这里命名为exe监听，并将监听端口设置为9001，点击保存即可</p><p>之后我们生成一个恶意exe文件，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129214815355.png" alt="image-20241129214815355"></p><p>生成后将这个文件通过蚁剑上传到我们的靶机，命令行运行后我们可以在我们CS上收到会话</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/214a646d6022b0f0ac13df4d29a6ce68.png" alt="214a646d6022b0f0ac13df4d29a6ce68"></p><p>拿到会话第一步，进行权限提升，我们这里直接使用cs自带的权限提升工具</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/b7cec765bfdbbf57b11fc3b4eb043981.png" alt="b7cec765bfdbbf57b11fc3b4eb043981"></p><p>我们将权限升至system权限后，首先第一步把防火墙关闭，方便我们后续进行操作</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129220019656.png" alt="image-20241129220019656"></p><h1 id="内网信息收集"><a href="#内网信息收集" class="headerlink" title="内网信息收集"></a>内网信息收集</h1><p>成功上线后进行信息收集，我们首先将域控IP找出来，我们执行net view即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129220045450.png" alt="image-20241129220045450"></p><p>我们这里发现了域控主机IP为<code>192.168.138.138</code>，且开放了445端口，那我们就可以使用哈希传递利用已知的密码打域控主机，我们首先使用mimikatz获取明文密码，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129220348210.png" alt="image-20241129220348210"></p><p>获取了各种凭据之后我们就可以进行哈希传递攻击了</p><h1 id="哈希传递攻击"><a href="#哈希传递攻击" class="headerlink" title="哈希传递攻击"></a>哈希传递攻击</h1><p>我们创建SMB监听器，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129220544066.png" alt="image-20241129220544066"></p><p>选择哈希传递即可</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/af45656b6a733fb6c22a0c3aaf7451ab.png" alt="af45656b6a733fb6c22a0c3aaf7451ab"></p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129220720601.png" alt="image-20241129220720601"></p><p>点击运行后即可获得DC域控的权限，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241129220809133.png" alt="image-20241129220809133"></p><h1 id="创建黄金票据"><a href="#创建黄金票据" class="headerlink" title="创建黄金票据"></a>创建黄金票据</h1><p>在DC上运行mimikatz抓取哈希值和明文密码，然后通过SID、域名和krbtgt哈希创建属于我们自己的黄金票据即可，如下所示</p><p><img src="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/0e6be5d04499dc910fabd6f10b827bfa.png" alt="0e6be5d04499dc910fabd6f10b827bfa"></p><p>至此整个靶场全部攻克，接下来进行痕迹清理即可</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 网络攻防 </category>
+          
+          <category> 红蓝对抗 </category>
+          
+          <category> 红队入侵 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实战打靶 </tag>
+            
+            <tag> 红队技战法 </tag>
+            
+            <tag> 内网渗透 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>红日靶场-4</title>
       <link href="/post/f07b1073.html"/>
       <url>/post/f07b1073.html</url>
