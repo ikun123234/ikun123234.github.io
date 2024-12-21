@@ -1,0 +1,354 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>2024长城杯溯源取证wp | Borgeousのblog</title><meta name="author" content="hack_Borgeous"><meta name="copyright" content="hack_Borgeous"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="背景材料您的同事李白在运维一台部署了移动应用服务端的linux服务器时发现了异常，好像被黑客攻击了。小李通过简单分析，发现可能是由于公司的移动应用和其服务端程序都存在安全问题导致的。小李将当天可能与攻击相关的流量导出，并与移动应用一起打包压缩，你可以下载分析，也可以登录此服务器进行攻击溯源、排查等，提供了SSH和VNC访问的方式供您和您的团队进行分析取证。 关卡一黑客攻击此服务器所使用的2个IP分">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2024长城杯溯源取证wp">
+<meta property="og:url" content="http://www.hackborgeous.top/post/af4937d.html">
+<meta property="og:site_name" content="Borgeousのblog">
+<meta property="og:description" content="背景材料您的同事李白在运维一台部署了移动应用服务端的linux服务器时发现了异常，好像被黑客攻击了。小李通过简单分析，发现可能是由于公司的移动应用和其服务端程序都存在安全问题导致的。小李将当天可能与攻击相关的流量导出，并与移动应用一起打包压缩，你可以下载分析，也可以登录此服务器进行攻击溯源、排查等，提供了SSH和VNC访问的方式供您和您的团队进行分析取证。 关卡一黑客攻击此服务器所使用的2个IP分">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.hackborgeous.top/img/AVAtar.jpg">
+<meta property="article:published_time" content="2024-12-21T05:40:02.000Z">
+<meta property="article:modified_time" content="2024-12-21T08:28:36.168Z">
+<meta property="article:author" content="hack_Borgeous">
+<meta property="article:tag" content="web_security computer tecnology">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.hackborgeous.top/img/AVAtar.jpg"><link rel="shortcut icon" href="/img/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8.png"><link rel="canonical" href="http://www.hackborgeous.top/post/af4937d.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":false,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: hack_Borgeous","link":"链接: ","source":"来源: Borgeousのblog","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '2024长城杯溯源取证wp',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-12-21 16:28:36'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/js-heo@1.0.11/mainColor/heoMainColor.css"><link rel="stylesheet" href="/css/bilibiliBanner.css"  media="defer" onload="this.media='screen'"><link rel="stylesheet" href="/css/universe.css"><link rel="stylesheet" href="https://npm.elemecdn.com/ethan4116-blog/lib/css/plane_v2.css"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/loading-bar.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/js-heo@1.0.11/categoryBar/categoryBar.css"><!-- hexo injector head_end start --><link rel="stylesheet" href="https://cdn.cbd.int/hexo-butterfly-clock-anzhiyu/lib/clock.min.css" /><link rel="stylesheet" href="https://npm.elemecdn.com/hexo-butterfly-tag-plugins-plus@latest/lib/assets/font-awesome-animation.min.css" media="defer" onload="this.media='all'"><link rel="stylesheet" href="https://npm.elemecdn.com/hexo-butterfly-tag-plugins-plus@latest/lib/tag_plugins.css" media="defer" onload="this.media='all'"><script src="https://npm.elemecdn.com/hexo-butterfly-tag-plugins-plus@latest/lib/assets/carousel-touch.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Zfour/Butterfly-double-row-display@1.00/cardlistpost.min.css"/>
+<style>#recent-posts > .recent-post-item >.recent-post-info > .article-meta-wrap > .tags:before {content:"\A";
+  white-space: pre;}#recent-posts > .recent-post-item >.recent-post-info > .article-meta-wrap > .tags > .article-meta__separator{display:none}</style>
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load',() => { preloader.endLoading() })
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', () => { preloader.initLoading() }, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', () => { preloader.endLoading() }, 'preloader_end')
+  }
+})()</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/lazyload.gif" data-original="/img/AVAtar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">84</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">138</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">57</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-graduation-cap"></i><span> 博客文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fas fa-comments-o"></i><span> 说说</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fas fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于作者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Borgeousのblog"><span class="site-name">Borgeousのblog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-graduation-cap"></i><span> 博客文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fas fa-comments-o"></i><span> 说说</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fas fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于作者</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">2024长城杯溯源取证wp</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-12-21T05:40:02.000Z" title="发表于 2024-12-21 13:40:02">2024-12-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-12-21T08:28:36.168Z" title="更新于 2024-12-21 16:28:36">2024-12-21</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>4分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="2024长城杯溯源取证wp"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="背景材料"><a href="#背景材料" class="headerlink" title="背景材料"></a>背景材料</h1><p>您的同事李白在运维一台部署了移动应用服务端的linux服务器时发现了异常，好像被黑客攻击了。小李通过简单分析，发现可能是由于公司的移动应用和其服务端程序都存在安全问题导致的。小李将当天可能与攻击相关的流量导出，并与移动应用一起打包压缩，你可以下载分析，也可以登录此服务器进行攻击溯源、排查等，提供了SSH和VNC访问的方式供您和您的团队进行分析取证。</p>
+<h1 id="关卡一"><a href="#关卡一" class="headerlink" title="关卡一"></a>关卡一</h1><p>黑客攻击此服务器所使用的2个IP分别是什么（ascii码从小到大排列，空格分隔）</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/66b357f253962ad9e15aaf873e45b644.png" alt="66b357f253962ad9e15aaf873e45b644"></p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221134933385.png" alt="image-20241221134933385"></p>
+<p>很容易可以在流量包中找到两个恶意ip，一个进行了sql注入，一个进行恶意命令执行</p>
+<h1 id="关卡二"><a href="#关卡二" class="headerlink" title="关卡二"></a>关卡二</h1><p>存在安全问题的apk中使用的登录密码是什么?</p>
+<p>我们这里采用jadx对apk进行逆向，然后在源文件中找到登陆密码</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221135458521.png" alt="image-20241221135458521"></p>
+<p>这里的密码很容易就能看出是<code>password663399</code>，当然也可以去流量包中找登陆操作，也是一样的</p>
+<h1 id="关卡三"><a href="#关卡三" class="headerlink" title="关卡三"></a>关卡三</h1><p>黑客尝试上传一个文件但显示无上传权限的文件名是什么？</p>
+<p>我们回到我们的流量包，找上传相关事件，直接搜索POST数据包，并且搜索upload关键词，然后通过查找返回状态码为200的数据包</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221140857336.png" alt="image-20241221140857336"></p>
+<h1 id="关卡四"><a href="#关卡四" class="headerlink" title="关卡四"></a>关卡四</h1><p>黑客利用的漏洞接口的api地址是什么?（<a target="_blank" rel="noopener" href="http://xxxx/xx">http://xxxx/xx</a>)</p>
+<p>根据前面对流量包的观察，我们可以很清楚的知道利用的url为<code>http://202.1.1.66:8080/api/upload</code></p>
+<h1 id="关卡五"><a href="#关卡五" class="headerlink" title="关卡五"></a>关卡五</h1><p>黑客上传的webshell绝对路径是什么？</p>
+<p>我们沿着刚刚的上传点往下分析，继续找状态码为200的数据包，一个个分析</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221141454414.png" alt="image-20241221141454414"></p>
+<p>我们发现了这个流量，显而易见，我们找到了jsp马，提交我们的绝对路径即可，这里没有靶机，我们没办法找到对应的绝对路径，只能看wp的路径</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/local/tomcat/webapps/ROOT/static/s74e7vwmzs21d5x6.jsp</span><br></pre></td></tr></table></figure>
+<h1 id="关卡六"><a href="#关卡六" class="headerlink" title="关卡六"></a>关卡六</h1><p>黑客上传的webshell的密码是什么？</p>
+<p>白给题，根据刚刚的流量包可以很轻松的知道我们的webshell连接密码</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221142834271.png" alt="image-20241221142834271"></p>
+<p>当然这里比较难看出来，我们可以继续看后续流量包的连接密码，我们直接搜索<code>s74e7vwmzs21d5x6.jsp</code>，如下所示</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221143137387.png" alt="image-20241221143137387"></p>
+<p>我们可以看到这里有很多<code>bing_pass</code>，所以我们猜测这里的密码就是<code>bing_pass</code></p>
+<h1 id="关卡七"><a href="#关卡七" class="headerlink" title="关卡七"></a>关卡七</h1><p>黑客通过webshell执行的第一条命令是什么？</p>
+<p>我们这里分析可知，这是很经典的冰蝎流量，我们首先要找的就是我们的密钥</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221144508227.png" alt="image-20241221144508227"></p>
+<p>又我们这个代码可知，我们的密钥是随机产生的，但是我们的流量包中出现了两个特殊的字符串，如下所示</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/f8a943c6fab24b36e59e7219e5933920.png" alt="f8a943c6fab24b36e59e7219e5933920"></p>
+<p>我们拿去尝试解密第一个状态码为200的返回包，可以发现密钥是<code>b99f657b04941030</code></p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221144728434.png" alt="image-20241221144728434"></p>
+<p>格式化后我们发现执行的是pwd命令</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221145035143.png" alt="image-20241221145035143"></p>
+<h1 id="关卡八"><a href="#关卡八" class="headerlink" title="关卡八"></a>关卡八</h1><p>黑客获取webshell时查询当前shell的权限是什么？</p>
+<p>我们在pwd命令下可以看见我们的执行shell的权限是tomcat</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/9b9bff23ff5a2ae0b643ffb9993c524a.png" alt="9b9bff23ff5a2ae0b643ffb9993c524a"></p>
+<h1 id="关卡九"><a href="#关卡九" class="headerlink" title="关卡九"></a>关卡九</h1><p>利用webshell查询服务器Linux系统发行版本是什么？</p>
+<p>继续查询后续流量包，挨个解密，我们可以看到发行版本如下所示</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221145822989.png" alt="image-20241221145822989"></p>
+<h1 id="关卡十"><a href="#关卡十" class="headerlink" title="关卡十"></a>关卡十</h1><p>黑客从服务器上下载的秘密文件的绝对路径是什么？</p>
+<p>我们这里直接看ip为202.1.1.66的数据包，因为要下载的话，我们的源头肯定十靶机ip，所以我们直接过滤对应的ip即可</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221151522781.png" alt="image-20241221151522781"></p>
+<p>我们找稍微比较大的数据包，追踪TCP流即可，发现我们的本地路径为<code>/static/secert.file</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/local/tomcat/webapps/ROOT/static/secert.file</span><br></pre></td></tr></table></figure>
+<h1 id="关卡十一"><a href="#关卡十一" class="headerlink" title="关卡十一"></a>关卡十一</h1><p>黑客通过反连执行的第一条命令是什么？</p>
+<p>我们找到对应的流量包，对传入的命令进行反编译，如下所示</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221152952474.png" alt="image-20241221152952474"></p>
+<p>我们可以看到这就是一个执行反弹shell的class文件，我们可以看到反连的地址为202.1.1.129，所以我们直接定位到这一部分流量，查找执行的命令即可</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221153629002.png" alt="image-20241221153629002"></p>
+<p>所以我们的第一个命令是<code>cat /etc/passwd</code></p>
+<h1 id="关卡十二"><a href="#关卡十二" class="headerlink" title="关卡十二"></a>关卡十二</h1><p>黑客通过什么文件修改的root密码（绝对路径）</p>
+<p>我们看第二条命令，黑客将新密码通过echo写入<code>/etc/passwd</code>文件中，我们可以知道这就是黑客修改的绝对路径</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221154006711.png" alt="image-20241221154006711"></p>
+<h1 id="关卡十三"><a href="#关卡十三" class="headerlink" title="关卡十三"></a>关卡十三</h1><p>黑客设置的root密码是多少？</p>
+<p>直接用hashcat解密即可</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hashcat -m 1800 -a 0 &#x27;$6$KHysqjWMnoaHJ4QW$p1cMTekiYb/6xA2u7j4jAD3m5shTPlPAtM6jyoex73MxxHXlms4X0874ml/gw6.LETsMs5oXLWyGeSAddx2N..&#x27; /usr/share/wordlists/rockyou.txt</span><br></pre></td></tr></table></figure>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221155346475.png" alt="image-20241221155346475"></p>
+<p>最后解出来的密码是123456</p>
+<h1 id="关卡十四"><a href="#关卡十四" class="headerlink" title="关卡十四"></a>关卡十四</h1><p>黑客留下后门的反连的ip和port是什么？（ip:port)</p>
+<p>根据刚刚反编译的代码，我们可以很容易知道ip和port，但是我们上交后发现不对，我们继续看有没有别的信息</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221155955526.png" alt="image-20241221155955526"></p>
+<p>我们可以看到后续连接端口变成了9999，我们可以猜测连接的端口为<code>9999</code>，答案正确</p>
+<h1 id="关卡十五"><a href="#关卡十五" class="headerlink" title="关卡十五"></a>关卡十五</h1><p>黑客通过后门反连执行的第一条命令是什么？</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221160318201.png" alt="image-20241221160318201"></p>
+<p>查找第一个9999端口的tcp包，可以发现执行的命令是<code>rpm -qa | grep pam</code></p>
+<h1 id="关卡十六"><a href="#关卡十六" class="headerlink" title="关卡十六"></a>关卡十六</h1><p>黑客通过什么文件留下了后门？</p>
+<p>由于没有靶机，但是给了我们这两个附件，我们直接交就ok了</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221161334835.png" alt="image-20241221161334835"></p>
+<h1 id="关卡十七"><a href="#关卡十七" class="headerlink" title="关卡十七"></a>关卡十七</h1><p>黑客设置的后门密码是什么？</p>
+<p>我们直接对so文件进行逆向，用ida直接逆向，看看有没有密码，直接shift+f12看字符串</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/image-20241221162054803.png" alt="image-20241221162054803"></p>
+<p>密码是<code>ssh_back_pwd</code></p>
+<h1 id="关卡十八"><a href="#关卡十八" class="headerlink" title="关卡十八"></a>关卡十八</h1><p>黑客的后门将root密码记录在哪个文件中？（绝对路径）</p>
+<p>同样通过ida可以找到，如下所示</p>
+<p><img src="/img/lazyload.gif" data-original="https://raw.githubusercontent.com/ikun123234/image_repo/main/image/0aa863479a15d1eb6a35bf806f5bdddf.png" alt="0aa863479a15d1eb6a35bf806f5bdddf"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://www.hackborgeous.top">hack_Borgeous</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://www.hackborgeous.top/post/af4937d.html">http://www.hackborgeous.top/post/af4937d.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://www.hackborgeous.top" target="_blank">Borgeousのblog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/AVAtar.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.png" target="_blank"><img class="post-qr-code-img" src="/img/lazyload.gif" data-original="/img/wechat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/Alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/img/lazyload.gif" data-original="/img/Alipay.jpg" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-full"><a href="/post/260d256e.html" title="2024楚慧杯wp"><img class="cover" src="/img/lazyload.gif" data-original="/img/top_img58.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">2024楚慧杯wp</div></div></a></div></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="twikoo-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/lazyload.gif" data-original="/img/AVAtar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">hack_Borgeous</div><div class="author-info__description">阳光洒肩头，仿佛自由人</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">84</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">138</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">57</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ikun123234"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ikun123234" target="_blank" title="Github"><i class="fab fa-github" style="color: ;"></i></a><a class="social-icon" href="https://qm.qq.com/q/h90oJQceJy" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:3167722168@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: ;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">如果在阅读过程中遇到任何问题，请及时评论或留言，看到了会在第一时间回复</div></div><div class="xpand" style="height:200px;"><canvas class="illo" width="800" height="800" style="max-width: 200px; max-height: 200px; touch-action: none; width: 640px; height: 640px;"></canvas></div><script src="https://npm.elemecdn.com/ethan4116-blog/lib/js/other/two-people/twopeople1.js"></script><script src="https://npm.elemecdn.com/ethan4116-blog/lib/js/other/two-people/zdog.dist.js"></script><script id="rendered-js" src="https://npm.elemecdn.com/ethan4116-blog/lib/js/other/two-people/twopeople.js"></script><style>.card-widget.card-announcement {
+margin: 0;
+align-items: center;
+justify-content: center;
+text-align: center;
+}
+canvas {
+display: block;
+margin: 0 auto;
+cursor: move;
+}</style><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E6%9D%90%E6%96%99"><span class="toc-number">1.</span> <span class="toc-text">背景材料</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E4%B8%80"><span class="toc-number">2.</span> <span class="toc-text">关卡一</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E4%BA%8C"><span class="toc-number">3.</span> <span class="toc-text">关卡二</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E4%B8%89"><span class="toc-number">4.</span> <span class="toc-text">关卡三</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%9B%9B"><span class="toc-number">5.</span> <span class="toc-text">关卡四</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E4%BA%94"><span class="toc-number">6.</span> <span class="toc-text">关卡五</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%85%AD"><span class="toc-number">7.</span> <span class="toc-text">关卡六</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E4%B8%83"><span class="toc-number">8.</span> <span class="toc-text">关卡七</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%85%AB"><span class="toc-number">9.</span> <span class="toc-text">关卡八</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E4%B9%9D"><span class="toc-number">10.</span> <span class="toc-text">关卡九</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81"><span class="toc-number">11.</span> <span class="toc-text">关卡十</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E4%B8%80"><span class="toc-number">12.</span> <span class="toc-text">关卡十一</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E4%BA%8C"><span class="toc-number">13.</span> <span class="toc-text">关卡十二</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E4%B8%89"><span class="toc-number">14.</span> <span class="toc-text">关卡十三</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E5%9B%9B"><span class="toc-number">15.</span> <span class="toc-text">关卡十四</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E4%BA%94"><span class="toc-number">16.</span> <span class="toc-text">关卡十五</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E5%85%AD"><span class="toc-number">17.</span> <span class="toc-text">关卡十六</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E4%B8%83"><span class="toc-number">18.</span> <span class="toc-text">关卡十七</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E5%8D%A1%E5%8D%81%E5%85%AB"><span class="toc-number">19.</span> <span class="toc-text">关卡十八</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/post/af4937d.html" title="2024长城杯溯源取证wp">2024长城杯溯源取证wp</a><time datetime="2024-12-21T05:40:02.000Z" title="发表于 2024-12-21 13:40:02">2024-12-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/post/260d256e.html" title="2024楚慧杯wp"><img src="/img/lazyload.gif" data-original="/img/top_img58.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="2024楚慧杯wp"/></a><div class="content"><a class="title" href="/post/260d256e.html" title="2024楚慧杯wp">2024楚慧杯wp</a><time datetime="2024-12-20T11:35:59.000Z" title="发表于 2024-12-20 19:35:59">2024-12-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/post/7c8f2a59.html" title="第二届“长城杯”信息安全铁人三项赛部分wp"><img src="/img/lazyload.gif" data-original="/img/top_img57.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="第二届“长城杯”信息安全铁人三项赛部分wp"/></a><div class="content"><a class="title" href="/post/7c8f2a59.html" title="第二届“长城杯”信息安全铁人三项赛部分wp">第二届“长城杯”信息安全铁人三项赛部分wp</a><time datetime="2024-12-16T13:40:02.000Z" title="发表于 2024-12-16 21:40:02">2024-12-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/post/7f542627.html" title="THM L1 Operation Tiny Frostbite"><img src="/img/lazyload.gif" data-original="/img/top_img56.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="THM L1 Operation Tiny Frostbite"/></a><div class="content"><a class="title" href="/post/7f542627.html" title="THM L1 Operation Tiny Frostbite">THM L1 Operation Tiny Frostbite</a><time datetime="2024-12-02T12:25:46.000Z" title="发表于 2024-12-02 20:25:46">2024-12-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/post/a9b06281.html" title="WuCup网络安全技能大赛WP"><img src="/img/lazyload.gif" data-original="/img/top_img55.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="WuCup网络安全技能大赛WP"/></a><div class="content"><a class="title" href="/post/a9b06281.html" title="WuCup网络安全技能大赛WP">WuCup网络安全技能大赛WP</a><time datetime="2024-12-01T11:04:35.000Z" title="发表于 2024-12-01 19:04:35">2024-12-01</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2024  <i id="heartbeat" class="fa fas fa-heartbeat"></i> hack_Borgeous</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">I wish you to become your own sun, no need to rely on who's light.<p><a target="_blank" href="https://hexo.io/"><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/Frame-Hexo-blue?style=flat&logo=hexo" title="博客框架为Hexo"></a>&nbsp;<a target="_blank" href="https://butterfly.js.org/"><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/Theme-Butterfly-6513df?style=flat&logo=bitdefender" title="主题采用butterfly"></a>&nbsp;<a target="_blank" href="https://www.jsdelivr.com/"><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/CDN-jsDelivr-orange?style=flat&logo=jsDelivr" title="本站使用JsDelivr为静态资源提供CDN加速"></a> &nbsp;<a target="_blank" href="https://vercel.com/ "><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/Hosted-Vervel-brightgreen?style=flat&logo=Vercel" title="本站采用双线部署，默认线路托管于Vercel"></a>&nbsp;<a target="_blank" href="https://vercel.com/ "><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/Hosted-Coding-0cedbe?style=flat&logo=Codio" title="本站采用双线部署，联通线路托管于Coding"></a>&nbsp;<a target="_blank" href="https://github.com/"><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/Source-Github-d021d6?style=flat&logo=GitHub" title="本站项目由Gtihub托管"></a>&nbsp;<a target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img src="/img/lazyload.gif" data-original="https://img.shields.io/badge/Copyright-BY--NC--SA%204.0-d42328?style=flat&logo=Claris" title="本站采用知识共享署名-非商业性使用-相同方式共享4.0国际许可协议进行许可"></a></p></div></div><link rel="stylesheet" href="https://fastly.jsdelivr.net/gh/HCLonely/images@master/others/heartbeat.min.css"></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const getCount = () => {
+    const countELement = document.getElementById('twikoo-count')
+    if(!countELement) return
+    twikoo.getCommentsCount({
+      envId: 'https://my-twikoo-opal.vercel.app/',
+      region: '',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(res => {
+      countELement.textContent = res[0].count
+    }).catch(err => {
+      console.error(err)
+    })
+  }
+
+  const init = () => {
+    twikoo.init(Object.assign({
+      el: '#twikoo-wrap',
+      envId: 'https://my-twikoo-opal.vercel.app/',
+      region: '',
+      onCommentLoaded: () => {
+        btf.loadLightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+      }
+    }, null))
+
+    GLOBAL_CONFIG_SITE.isPost && getCount()
+  }
+
+  const loadTwikoo = () => {
+    if (typeof twikoo === 'object') setTimeout(init,0)
+    else getScript('https://cdn.jsdelivr.net/npm/twikoo@1.6.31/dist/twikoo.all.min.js').then(init)
+  }
+
+  if ('Twikoo' === 'Twikoo' || !true) {
+    if (true) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else loadTwikoo()
+  } else {
+    window.loadOtherComment = loadTwikoo
+  }
+})()</script></div><script async src="/js/title.js"></script><script async src="https://npm.elemecdn.com/tzy-blog/lib/js/other/sakura.js"></script><canvas id="universe"></canvas><script defer src="/js/universe.js"></script><script src="/js/fish.js"></script><script src="/js/bilibili-banner.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/js-heo@1.0.11/categoryBar/categoryBar.css"><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = false;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/click-show-text.min.js" data-mobile="false" data-text="富强,民主,文明,和谐,自由,平等,公正,法治,爱国,敬业,诚信,友善" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div><!-- hexo injector body_end start --><script data-pjax>
+  function butterfly_clock_anzhiyu_injector_config(){
+    var parent_div_git = document.getElementsByClassName('sticky_layout')[0];
+    var item_html = '<div class="card-widget card-clock"><div class="card-glass"><div class="card-background"><div class="card-content"><div id="hexo_electric_clock"><img class="entered loading" id="card-clock-loading" src="/img/lazyload.gif" data-original="https://cdn.cbd.int/hexo-butterfly-clock-anzhiyu/lib/loading.gif" style="height: 120px; width: 100%;" data-ll-status="loading"/></div></div></div></div></div>';
+    console.log('已挂载butterfly_clock_anzhiyu')
+    if(parent_div_git) {
+      parent_div_git.insertAdjacentHTML("afterbegin",item_html)
+    }
+  }
+  var elist = 'null'.split(',');
+  var cpage = location.pathname;
+  var epage = 'all';
+  var qweather_key = 'b16a1fa0e63c46a4b8f28abfb06ae3fe';
+  var gaud_map_key = '5e02e3f682596d2384652be789b5c03e';
+  var baidu_ak_key = 'undefined';
+  var flag = 0;
+  var clock_rectangle = '112.982279,28.19409';
+  var clock_default_rectangle_enable = 'false';
+
+  for (var i=0;i<elist.length;i++){
+    if (cpage.includes(elist[i])){
+      flag++;
+    }
+  }
+
+  if ((epage ==='all')&&(flag == 0)){
+    butterfly_clock_anzhiyu_injector_config();
+  }
+  else if (epage === cpage){
+    butterfly_clock_anzhiyu_injector_config();
+  }
+  </script><script src="https://widget.qweather.net/simple/static/js/he-simple-common.js?v=2.0"></script><script data-pjax src="https://cdn.cbd.int/hexo-butterfly-clock-anzhiyu/lib/clock.min.js"></script><script async src="//at.alicdn.com/t/font_2032782_8d5kxvn09md.js"></script><!-- hexo injector body_end end --><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":20,"vOffset":-20},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
